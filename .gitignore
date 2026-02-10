@@ -49,3 +49,6 @@ playwright/.cache/
 
 # System files
 Thumbs.db
+
+# Project specific ignores
+images/
