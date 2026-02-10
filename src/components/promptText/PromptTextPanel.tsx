@@ -1,0 +1,91 @@
+import { useCallback, useMemo, useState } from 'react';
+import { Copy } from 'lucide-react';
+import { useAppStoreSelector } from '../../store/hooks';
+import { buildPromptText, PromptFormat } from './buildPromptText';
+import { IconButton } from '../ui/Button';
+import { useToast } from '../ui/Toast';
+import { Tabs, TabsList, TabsTrigger } from '../ui/Tabs';
+
+export function PromptTextPanel() {
+  const fragments = useAppStoreSelector((s) => s.state.fragments);
+  const { showToast } = useToast();
+  const [format, setFormat] = useState<PromptFormat>('markdown');
+
+  const promptText = useMemo(() => buildPromptText(fragments, format), [fragments, format]);
+  const isEmpty = promptText.trim().length === 0;
+
+  const handleCopy = useCallback(() => {
+    if (isEmpty) return;
+    
+    navigator.clipboard.writeText(promptText).then(() => {
+      showToast('已复制', 'success');
+    }).catch((err) => {
+      console.error('Failed to copy: ', err);
+      showToast('复制失败', 'error');
+    });
+  }, [promptText, isEmpty, showToast]);
+
+  return (
+    <div className="flex flex-col h-full bg-white relative">
+      <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+          提示词生成
+        </h2>
+        
+        <div className="flex items-center gap-2">
+          <Tabs value={format} onValueChange={(v) => setFormat(v as PromptFormat)}>
+            <TabsList className="h-7">
+              <TabsTrigger 
+                value="markdown" 
+                className="text-xs px-2 py-0.5 h-6"
+                data-testid="prompt-text-format-markdown"
+              >
+                Markdown
+              </TabsTrigger>
+              <TabsTrigger 
+                value="yaml" 
+                className="text-xs px-2 py-0.5 h-6"
+                data-testid="prompt-text-format-yaml"
+              >
+                YAML
+              </TabsTrigger>
+              <TabsTrigger 
+                value="xml" 
+                className="text-xs px-2 py-0.5 h-6"
+                data-testid="prompt-text-format-xml"
+              >
+                XML
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          <IconButton
+            onClick={handleCopy}
+            disabled={isEmpty}
+            title="复制全部"
+            data-testid="prompt-text-copy"
+            variant="secondary"
+            size="sm"
+          >
+            <Copy className="w-4 h-4" />
+          </IconButton>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-auto p-6">
+        {isEmpty ? (
+          <div data-testid="prompt-text-empty" className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2">
+            <p className="text-sm">片段区为空，请从右侧加入提示词</p>
+          </div>
+        ) : (
+          <div
+            data-testid="prompt-text"
+            className="font-mono text-sm text-gray-800 whitespace-pre-wrap break-all leading-relaxed select-text bg-gray-50/50 p-4 rounded-lg border border-gray-100"
+          >
+            {promptText}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
