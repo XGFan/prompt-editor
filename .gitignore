@@ -7,18 +7,45 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dependency directories
+node_modules/
+jspm_packages/
 
-# Editor directories and files
+# Build outputs
+dist/
+dist-ssr/
+dist-pack/
+dist-sdk/
+
+# Tauri build outputs
+src-tauri/target/
+
+# Playwright/Testing results
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Local env files
+*.local
+.env
+.env.*
+!.env.example
+
+# IDE / Editor
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
+.DS_Store
+
+# AI/Agent local state
+.opencode/
+.sisyphus/
+
+# System files
+Thumbs.db
