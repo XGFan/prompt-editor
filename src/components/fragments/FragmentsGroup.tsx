@@ -219,72 +219,74 @@ export const FragmentsGroup = forwardRef<HTMLDivElement, FragmentsGroupProps>(({
           </div>
         </div>
 
-        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
-          {!isRenaming && !readOnly && (
-            <>
-              <IconButton 
-                size="sm" 
-                onClick={handleCreatePrompt}
-                title="添加提示词"
-              >
-                <Plus className="w-4 h-4" />
-              </IconButton>
-              
-              <div className="relative" ref={menuRef}>
+        {!readOnly && (
+          <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity focus-within:opacity-100">
+            {!isRenaming && (
+              <>
                 <IconButton 
                   size="sm" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setMenuOpen(!menuOpen);
-                    setDeleteConfirm(false);
-                  }}
-                  title="菜单"
+                  onClick={handleCreatePrompt}
+                  title="添加提示词"
                 >
-                  <MoreHorizontal className="w-4 h-4" />
+                  <Plus className="w-4 h-4" />
                 </IconButton>
+                
+                <div className="relative" ref={menuRef}>
+                  <IconButton 
+                    size="sm" 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMenuOpen(!menuOpen);
+                      setDeleteConfirm(false);
+                    }}
+                    title="菜单"
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </IconButton>
 
-                {menuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-100">
-                    <button
-                      type="button"
-                      className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setIsRenaming(true);
-                        setMenuOpen(false);
-                      }}
-                    >
-                      <Edit2 className="w-3 h-3" />
-                      重命名
-                    </button>
-                    
-                    <button
-                      type="button"
-                      className={cn(
-                        "w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors",
-                        deleteConfirm 
-                          ? "bg-red-600 text-white hover:bg-red-700" 
-                          : "text-red-600 hover:bg-red-50"
-                      )}
-                      onClick={handleDeleteGroup}
-                    >
-                      {deleteConfirm ? (
-                        <span className="font-bold whitespace-nowrap">
-                          {prompts.length > 0 ? `确认删除（将删除 ${prompts.length} 条）` : '确认删除'}
-                        </span>
-                      ) : (
-                        <>
-                          <Trash2 className="w-3.5 h-3.5" />
-                          删除
-                        </>
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </div>
+                  {menuOpen && (
+                    <div className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-lg border border-gray-100 py-1 z-10 animate-in fade-in zoom-in-95 duration-100">
+                      <button
+                        type="button"
+                        className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsRenaming(true);
+                          setMenuOpen(false);
+                        }}
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        重命名
+                      </button>
+                      
+                      <button
+                        type="button"
+                        className={cn(
+                          "w-full text-left px-3 py-1.5 text-xs flex items-center gap-2 transition-colors",
+                          deleteConfirm 
+                            ? "bg-red-600 text-white hover:bg-red-700" 
+                            : "text-red-600 hover:bg-red-50"
+                        )}
+                        onClick={handleDeleteGroup}
+                      >
+                        {deleteConfirm ? (
+                          <span className="font-bold whitespace-nowrap">
+                            {prompts.length > 0 ? `确认删除（将删除 ${prompts.length} 条）` : '确认删除'}
+                          </span>
+                        ) : (
+                          <>
+                            <Trash2 className="w-3.5 h-3.5" />
+                            删除
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </div>
 
       {!group.collapsed && (

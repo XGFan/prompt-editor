@@ -308,11 +308,14 @@ function PromptEditorSDKInner(
         <PromptTextPanel />
       </main>
 
-      <Splitter id="splitter-right" onResize={handleRightResize} onDoubleClick={handleReset} />
-
-      <aside data-testid="panel-library" className="flex-none h-full" style={{ width: libraryWidth }}>
-        <RightPanel hideFinished readOnly={sdkReadOnly} />
-      </aside>
+      {!sdkReadOnly && (
+        <>
+          <Splitter id="splitter-right" onResize={handleRightResize} onDoubleClick={handleReset} />
+          <aside data-testid="panel-library" className="flex-none h-full" style={{ width: libraryWidth }}>
+            <RightPanel hideFinished readOnly={sdkReadOnly} />
+          </aside>
+        </>
+      )}
 
       <ShortcutHelp />
     </div>

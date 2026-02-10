@@ -231,45 +231,47 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
             {renderContent ? renderContent(content) : content}
           </div>
 
-          <div
-            className={cn(
-              'absolute right-0 bottom-0 flex items-center justify-end gap-1 rounded-md border border-gray-200 bg-white/95 px-1 py-0.5 shadow-sm backdrop-blur-sm opacity-0 transition-opacity',
-              deleteConfirm || isExpanded
-                ? 'opacity-100 pointer-events-auto'
-                : 'group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto',
-            )}
-          >
-            {!readOnly && !deleteConfirm && (
-              <>
-                {extraActionsBefore}
-                <IconButton size="sm" onClick={(e) => { e.stopPropagation(); setIsEditing(true) }} title="编辑">
-                  <Edit2 className="w-3.5 h-3.5" />
-                </IconButton>
-                {extraActionsAfter}
-              </>
-            )}
+          {!readOnly && (
+            <div
+              className={cn(
+                'absolute right-0 bottom-0 flex items-center justify-end gap-1 rounded-md border border-gray-200 bg-white/95 px-1 py-0.5 shadow-sm backdrop-blur-sm opacity-0 transition-opacity',
+                deleteConfirm || isExpanded
+                  ? 'opacity-100 pointer-events-auto'
+                  : 'group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto',
+              )}
+            >
+              {!deleteConfirm && (
+                <>
+                  {extraActionsBefore}
+                  <IconButton size="sm" onClick={(e) => { e.stopPropagation(); setIsEditing(true) }} title="编辑">
+                    <Edit2 className="w-3.5 h-3.5" />
+                  </IconButton>
+                  {extraActionsAfter}
+                </>
+              )}
 
-            {!readOnly && deleteConfirm ? (
-              <Button
-                size="sm"
-                variant="danger"
-                onClick={handleDeleteClick}
-                title="确认删除"
-                className="h-6 px-2 text-[11px]"
-              >
-                确认删除
-              </Button>
-            ) : !readOnly ? (
-              <IconButton
-                size="sm"
-                onClick={handleDeleteClick}
-                title="删除"
-                className="text-gray-400 hover:text-red-600 hover:bg-red-50"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </IconButton>
-            ) : null}
-          </div>
+              {deleteConfirm ? (
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={handleDeleteClick}
+                  title="确认删除"
+                  className="h-6 px-2 text-[11px]"
+                >
+                  确认删除
+                </Button>
+              ) : (
+                <IconButton
+                  size="sm"
+                  onClick={handleDeleteClick}
+                  title="删除"
+                  className="text-gray-400 hover:text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                </IconButton>
+              )}
+            </div>
+          )}
         </div>
       </div>
     )
