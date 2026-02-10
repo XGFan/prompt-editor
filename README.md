@@ -2,22 +2,45 @@
 
 一个为 LLM 提示词工程师设计的轻量级、响应式三栏提示词管理工具。支持片段组合、库管理、拖拽排序及本地持久化。
 
-## 1. 安装与运行
+## 1. 仓库初始化说明 (Repository Setup)
 
-### 环境要求
+### 环境准备
 - **Node.js**: 18.0.0 或更高版本
 - **包管理器**: npm (建议使用 v9+)
+- **桌面端开发 (可选)**: Rust 环境 (stable) 及 Xcode 命令行工具 (macOS)
 
 ### 快速开始
-1. **安装依赖**:
+1. **克隆仓库**:
+   ```bash
+   git clone <repository-url>
+   cd prompt-editor
+   ```
+2. **安装依赖**:
    ```bash
    npm install
    ```
-2. **启动开发服务器**:
-   ```bash
-   npm run dev
-   ```
-   访问 `http://localhost:5173` 即可开始使用。
+3. **启动应用**:
+   - **Web 端 (浏览器)**:
+     ```bash
+     npm run dev
+     ```
+     访问 `http://localhost:5173`。
+   - **桌面端 (Tauri)**:
+     ```bash
+     npm run tauri:dev
+     ```
+
+### 常用命令表
+| 命令 | 描述 |
+| :--- | :--- |
+| `npm run dev` | 启动 Web 开发服务器 |
+| `npm run build` | 构建 Web 生产版本 (dist/) |
+| `npm run test` | 运行 Vitest 单元与集成测试 |
+| `npm run e2e` | 运行 Playwright 端到端测试 |
+| `npm run typecheck` | 执行 TypeScript 类型检查 |
+| `npm run tauri:dev` | 启动桌面端开发模式 |
+| `npm run tauri:build` | 构建桌面端安装包 |
+| `npm run pack:sdk` | 打包 React SDK (dist-pack/) |
 
 ## 2. 测试与验证
 
