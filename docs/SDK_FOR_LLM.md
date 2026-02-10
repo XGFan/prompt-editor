@@ -404,7 +404,7 @@ npm run pack:sdk
 Host 仓库安装：
 
 ```bash
-npm install /absolute/path/to/prompt-portal/dist-pack/prompt-editor-sdk-<version>.tgz
+npm install /absolute/path/to/prompt-editor/dist-pack/prompt-editor-sdk-<version>.tgz
 ```
 
 Host 导入：

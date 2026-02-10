@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "prompt-portal",
+  "productName": "prompt-editor",
   "version": "0.1.0",
-  "identifier": "com.promptportal.local",
+  "identifier": "com.prompteditor.local",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://127.0.0.1:4173",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Prompt Portal",
+        "title": "Prompt Editor",
         "width": 800,
         "height": 600,
         "resizable": true,

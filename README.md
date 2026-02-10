@@ -1,4 +1,4 @@
-# LLM Prompt Panel SPA
+# Prompt Editor
 
 一个为 LLM 提示词工程师设计的轻量级、响应式三栏提示词管理工具。支持片段组合、库管理、拖拽排序及本地持久化。
 
@@ -146,7 +146,7 @@
 
 ### 产物路径
 构建完成后，`.app` 文件位于：
-`src-tauri/target/release/bundle/macos/prompt-portal.app`
+`src-tauri/target/release/bundle/macos/prompt-editor.app`
 
 ### v1 版本限制
 - **未签名**: 暂未集成开发者证书签名与公证 (Notarization)。
@@ -248,7 +248,7 @@ function HostDialogEditor() {
 
 2. 在 Host 仓库安装本地 tarball：
    ```bash
-   npm install /absolute/path/to/prompt-portal/dist-pack/prompt-editor-sdk-<version>.tgz
+npm install /absolute/path/to/prompt-editor/dist-pack/prompt-editor-sdk-<version>.tgz
    ```
 
 3. 在 Host 代码中按包名导入并引入样式：
