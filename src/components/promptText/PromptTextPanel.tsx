@@ -58,15 +58,15 @@ export function PromptTextPanel({ lockedFormat }: PromptTextPanelProps) {
 
   return (
     <div className="flex flex-col h-full bg-white relative">
-      <div className="flex items-center justify-between p-4 border-b border-gray-100">
-        <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+      <div className="h-12 px-3 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
+        <span className="text-sm font-semibold text-gray-700">
           提示词生成
-        </h2>
+        </span>
         
         <div className="flex items-center gap-2">
           {!lockedFormat && (
             <Tabs value={format} onValueChange={handleFormatChange}>
-              <TabsList className="h-7">
+              <TabsList className="h-8">
                 <TabsTrigger 
                   value="markdown" 
                   className="text-xs px-2 py-0.5 h-6"
@@ -105,7 +105,7 @@ export function PromptTextPanel({ lockedFormat }: PromptTextPanelProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4">
         {isEmpty ? (
           <div data-testid="prompt-text-empty" className="h-full flex flex-col items-center justify-center text-gray-400 space-y-2">
             <p className="text-sm">片段区为空，请从右侧加入提示词</p>

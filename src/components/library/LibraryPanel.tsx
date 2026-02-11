@@ -7,11 +7,11 @@ import { Dialog } from '../ui/Dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
 import { useToast } from '../ui/Toast';
 import { useHotkeys } from '../../hooks/useHotkeys';
-import { Search, Plus, Download, Upload, FolderPlus, GripVertical, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Search, Plus, Download, Upload, FolderPlus, GripVertical, MoreHorizontal, Trash2, Pencil } from 'lucide-react';
 import { 
   DndContext, 
   DragOverlay, 
-  closestCorners, 
+  pointerWithin,
   KeyboardSensor, 
   PointerSensor, 
   useSensor, 
@@ -50,7 +50,10 @@ interface LibraryTabRowProps {
   readOnly: boolean;
   isMenuOpen: boolean;
   isDeleteConfirm: boolean;
-  onCreatePrompt: (groupId: GroupId) => void;
+  isRenaming: boolean;
+  onRenameStart: (groupId: GroupId) => void;
+  onRenameSubmit: (groupId: GroupId, newName: string) => void;
+  onRenameCancel: () => void;
   onToggleMenu: (groupId: GroupId) => void;
   onDeleteGroup: (groupId: GroupId) => void;
 }
@@ -62,15 +65,41 @@ function LibraryTabRow({
   readOnly,
   isMenuOpen,
   isDeleteConfirm,
-  onCreatePrompt,
+  isRenaming,
+  onRenameStart,
+  onRenameSubmit,
+  onRenameCancel,
   onToggleMenu,
   onDeleteGroup,
 }: LibraryTabRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
     id: groupId,
     data: { type: 'GROUP' },
-    disabled: readOnly,
+    disabled: readOnly || isRenaming,
   });
+
+  const [editName, setEditName] = useState(groupName);
+  
+  useEffect(() => {
+    setEditName(groupName);
+  }, [groupName, isRenaming]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
+      onRenameSubmit(groupId, editName);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
+      setEditName(groupName);
+      onRenameCancel();
+    }
+  };
+
+  const handleBlur = () => {
+    onRenameSubmit(groupId, editName);
+  };
 
   return (
     <div
@@ -87,21 +116,34 @@ function LibraryTabRow({
       <TabsTrigger
         value={groupId}
         data-testid={`library-tab-${groupId}`}
-        className={`w-full flex items-center gap-2 rounded-md py-2 pl-7 pr-12 text-sm font-medium outline-none transition-all hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 ${
+        className={`relative w-full flex items-center gap-2 rounded-md py-2 pl-7 pr-8 text-sm font-medium outline-none transition-all hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 ${
           isOver && !isDragging ? 'bg-blue-50 ring-2 ring-blue-200' : ''
         }`}
         title={groupName}
+        disabled={isRenaming}
       >
-        <span className="flex-1 truncate text-left">
-          {groupName}
-        </span>
+        {isRenaming ? (
+          <input
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={handleBlur}
+            autoFocus
+            onClick={(e) => e.stopPropagation()}
+            className="flex-1 min-w-0 h-5 px-1 text-sm bg-white border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
+          />
+        ) : (
+          <span className="flex-1 truncate text-left">
+            {groupName}
+          </span>
+        )}
         
-        <span className="shrink-0 text-[10px] text-gray-400 group-data-[state=active]:text-blue-500 font-mono">
+        <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-gray-400 group-data-[state=active]:text-blue-500 font-mono group-hover:opacity-0 transition-opacity">
           {count}
         </span>
       </TabsTrigger>
 
-      {!readOnly && (
+      {!readOnly && !isRenaming && (
         <>
           <button
             type="button"
@@ -115,19 +157,7 @@ function LibraryTabRow({
             <GripVertical className="w-3.5 h-3.5" />
           </button>
 
-          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1 z-10">
-            <button
-              type="button"
-              className="p-1 rounded-md hover:bg-gray-200 text-gray-500 bg-transparent border-none cursor-pointer"
-              title="添加提示词"
-              onClick={(e) => {
-                e.stopPropagation();
-                onCreatePrompt(groupId);
-              }}
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
             <div className="relative">
               <button
                 type="button"
@@ -143,6 +173,17 @@ function LibraryTabRow({
 
               {isMenuOpen && (
                 <div className="absolute right-0 top-full z-30 mt-1 w-32 rounded-md border border-gray-100 bg-white py-1 shadow-lg text-left">
+                  <button
+                    type="button"
+                    className="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 text-gray-700 hover:bg-gray-50"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRenameStart(groupId);
+                    }}
+                  >
+                    <Pencil className="w-3.5 h-3.5" />
+                    重命名
+                  </button>
                   <button
                     type="button"
                     className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 ${
@@ -183,7 +224,8 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
     save,
     movePrompt,
     reorderPromptWithinGroup,
-    reorderGroup
+    reorderGroup,
+    renameGroup
   } = useAppStoreSelector((s) => s);
   const appStoreApi = useCurrentAppStoreApi();
   const { showToast } = useToast();
@@ -196,6 +238,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [menuOpenGroupId, setMenuOpenGroupId] = useState<GroupId | null>(null);
   const [deleteConfirmGroupId, setDeleteConfirmGroupId] = useState<GroupId | null>(null);
+  const [renamingGroupId, setRenamingGroupId] = useState<GroupId | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<'GROUP' | 'PROMPT' | null>(null);
   
@@ -425,6 +468,29 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
     }, 3000);
   };
 
+  const handleRenameStart = (groupId: GroupId) => {
+    if (readOnly) return;
+    setRenamingGroupId(groupId);
+    setMenuOpenGroupId(null);
+  };
+
+  const handleRenameSubmit = (groupId: GroupId, newName: string) => {
+    const trimmed = newName.trim();
+    if (trimmed && trimmed !== state.library.groups[groupId]?.name) {
+      try {
+        renameGroup({ area: 'library', groupId, name: trimmed });
+        showToast('重命名成功', 'success');
+      } catch (e) {
+        showToast('重命名失败', 'error');
+      }
+    }
+    setRenamingGroupId(null);
+  };
+
+  const handleRenameCancel = () => {
+    setRenamingGroupId(null);
+  };
+
   const findContainer = (id: string): GroupId | undefined => {
     if (state.library.groups[id as GroupId]) {
       return id as GroupId;
@@ -560,7 +626,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCorners}
+      collisionDetection={pointerWithin}
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
@@ -594,69 +660,66 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
               <Download className="w-5 h-5" />
             </IconButton>
           </div>
-          {isCreatingGroup && (
-            <div className="p-2 border-b border-blue-100 bg-blue-50/30">
-              <input
-                ref={newGroupInputRef}
-                value={newGroupName}
-                onChange={(e) => setNewGroupName(e.target.value)}
-                onKeyDown={handleNewGroupKeyDown}
-                onBlur={submitNewGroup}
-                placeholder="分组名称..."
-                className="w-full h-8 px-2 text-sm border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
-              />
-            </div>
-          )}
-
-          {groupOrder.length === 0 && !isCreatingGroup && (
-            <div data-testid="library-empty" className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
-              <FolderPlus className="w-8 h-8 opacity-20" />
-              <span className="text-sm">暂无分组</span>
-              {!readOnly && <Button size="sm" variant="ghost" onClick={handleCreateGroup}>新建</Button>}
-            </div>
-          )}
-
-
-          {groupOrder.length > 0 && activeGroupId && (
-            <div className="flex flex-1 overflow-hidden min-h-0 h-full">
-              <Tabs
-                orientation="vertical"
+          <div className="flex flex-1 overflow-hidden min-h-0 h-full">
+            <Tabs
+              orientation="vertical"
                 value={activeGroupId}
                 onValueChange={setActiveGroupId}
                 className="flex flex-1 min-h-0 overflow-hidden h-full"
               >
-                <div className="flex flex-col w-[180px] border-r border-gray-200 h-full bg-gray-50/50 shrink-0">
-                  <div className="flex items-center justify-between px-2 h-9 shrink-0 border-b border-gray-200/50">
-                    <span className="text-xs font-semibold text-gray-500 pl-1">分组</span>
-                    {!readOnly && (
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-500 hover:text-gray-900" onClick={handleCreateGroup} title="新建分组">
-                        <Plus className="w-3.5 h-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                  <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
-                    <TabsList className="flex-1 w-full flex-col items-stretch justify-start gap-0.5 overflow-y-auto p-1 custom-scrollbar border-0 bg-transparent">
-                      {groupOrder.map((groupId) => {
-                        const group = state.library.groups[groupId];
-                        if (!group) return null;
+                <div className="flex flex-col w-[140px] border-r border-gray-200 h-full bg-gray-50/50 shrink-0">
+  
+                    <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
+                      <TabsList className="flex-1 w-full flex-col items-stretch justify-start gap-0.5 overflow-y-auto p-1 custom-scrollbar border-0 bg-transparent">
+                        {groupOrder.map((groupId) => {
+                          const group = state.library.groups[groupId];
+                          if (!group) return null;
 
-                        return (
-                          <LibraryTabRow
-                            key={groupId}
-                            groupId={groupId}
-                            groupName={group.name}
-                            count={visiblePromptsByGroup[groupId]?.length ?? 0}
-                            readOnly={readOnly}
-                            isMenuOpen={menuOpenGroupId === groupId}
-                            isDeleteConfirm={deleteConfirmGroupId === groupId}
-                            onCreatePrompt={handleCreatePromptInGroup}
-                            onToggleMenu={handleToggleGroupMenu}
-                            onDeleteGroup={handleDeleteGroupFromMenu}
-                          />
-                        );
-                      })}
-                    </TabsList>
-                  </SortableContext>
+                          return (
+                            <LibraryTabRow
+                              key={groupId}
+                              groupId={groupId}
+                              groupName={group.name}
+                              count={visiblePromptsByGroup[groupId]?.length ?? 0}
+                              readOnly={readOnly}
+                              isMenuOpen={menuOpenGroupId === groupId}
+                              isDeleteConfirm={deleteConfirmGroupId === groupId}
+                              isRenaming={renamingGroupId === groupId}
+                              onRenameStart={handleRenameStart}
+                              onRenameSubmit={handleRenameSubmit}
+                              onRenameCancel={handleRenameCancel}
+                              onToggleMenu={handleToggleGroupMenu}
+                              onDeleteGroup={handleDeleteGroupFromMenu}
+                            />
+                          );
+                        })}
+                        {!readOnly && (
+                          isCreatingGroup ? (
+                            <div className="flex items-center w-full h-8 px-2 gap-2 bg-white border border-blue-200 rounded shadow-sm shrink-0 mx-1 my-0.5">
+                              <FolderPlus className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                              <input
+                                ref={newGroupInputRef}
+                                value={newGroupName}
+                                onChange={(e) => setNewGroupName(e.target.value)}
+                                onKeyDown={handleNewGroupKeyDown}
+                                onBlur={submitNewGroup}
+                                placeholder="分组名称..."
+                                className="flex-1 min-w-0 h-6 text-sm bg-transparent border-none outline-none placeholder:text-gray-400"
+                                autoFocus
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              className="w-full flex items-center gap-2 py-2 pl-7 pr-4 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 rounded-md transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 my-0.5"
+                              onClick={handleCreateGroup}
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              新建分组
+                            </button>
+                          )
+                        )}
+                      </TabsList>
+                    </SortableContext>
                 </div>
 
                 <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden bg-white">
@@ -672,7 +735,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                         value={groupId}
                         className="flex flex-col h-full flex-1 m-0 p-0 min-h-0"
                       >
-                        <div className="flex items-center gap-2 px-3 h-10 shrink-0 border-b border-gray-100">
+                        <div className="flex items-center gap-2 px-3 h-12 shrink-0 border-b border-gray-200 bg-white">
                           <div className="relative flex-1">
                             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
                             <input
@@ -685,13 +748,13 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                           </div>
                           {!readOnly && (
                             <Button 
+                              variant="ghost" 
                               size="sm" 
-                              variant="primary" 
-                              className="h-8 px-3 text-xs gap-1.5 shadow-sm whitespace-nowrap"
+                              className="h-8 w-8 text-gray-500 hover:text-gray-900 p-0"
                               onClick={() => handleCreatePromptInGroup(groupId)}
+                              title="新建片段"
                             >
-                              <Plus className="w-3.5 h-3.5" />
-                              新建片段
+                              <Plus className="w-4 h-4" />
                             </Button>
                           )}
                         </div>
@@ -735,12 +798,11 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                 </div>
               </Tabs>
             </div>
-          )}
         </div>
 
         <DragOverlay dropAnimation={dropAnimation}>
           {activeGroup ? (
-            <div className="relative flex w-[240px] items-center gap-2 rounded-md bg-white py-2 pl-7 pr-12 text-sm font-medium shadow-xl ring-2 ring-blue-500/20 rotate-1">
+            <div className="relative flex w-[140px] items-center gap-2 rounded-md bg-white py-2 pl-7 pr-2 text-sm font-medium shadow-xl ring-2 ring-blue-500/20 rotate-1">
               <div className="absolute left-1 top-1/2 -translate-y-1/2 p-1 text-gray-400">
                 <GripVertical className="w-3.5 h-3.5" />
               </div>

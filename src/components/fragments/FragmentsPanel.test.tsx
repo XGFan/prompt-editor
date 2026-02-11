@@ -46,7 +46,7 @@ describe('FragmentsPanel', () => {
 
     expect(screen.getByText('暂无分组')).toBeInTheDocument();
 
-    const newGroupBtns = screen.getAllByText('新建分组');
+    const newGroupBtns = screen.getAllByTitle('新建分组');
     fireEvent.click(newGroupBtns[0]);
 
     const input = screen.getByPlaceholderText('分组名称...');
@@ -65,7 +65,7 @@ describe('FragmentsPanel', () => {
       </ToastProvider>
     );
 
-    const newGroupBtns = screen.getAllByText('新建分组');
+    const newGroupBtns = screen.getAllByTitle('新建分组');
     fireEvent.click(newGroupBtns[0]);
     const groupInput = screen.getByPlaceholderText('分组名称...');
     fireEvent.change(groupInput, { target: { value: 'My Prompts' } });
@@ -111,7 +111,7 @@ describe('FragmentsPanel', () => {
       </ToastProvider>
     );
 
-    const newGroupBtns = screen.getAllByText('新建分组');
+    const newGroupBtns = screen.getAllByTitle('新建分组');
     fireEvent.click(newGroupBtns[0]);
     const groupInput = screen.getByPlaceholderText('分组名称...');
     fireEvent.change(groupInput, { target: { value: 'Blank Group' } });

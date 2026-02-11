@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/core';
 import { SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { FragmentsItem } from './FragmentsItem';
-import type { GroupId, PromptId } from '../../domain/types';
+import type { GroupId, PromptId, PromptItem } from '../../domain/types';
 
 const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -240,22 +240,20 @@ export function FragmentsPanel({ readOnly = false }: FragmentsPanelProps) {
       autoScroll
     >
       <div className="flex flex-col h-full bg-white border-r border-gray-200">
-        <div className="flex flex-col gap-2 p-3 border-b border-gray-100 bg-gray-50/50">
-          <div className="flex items-center justify-between">
-             <span className="text-sm font-semibold text-gray-700">片段区</span>
-             {!readOnly && (
-               <Button 
-                  variant="secondary" 
-                  size="sm" 
-                  onClick={handleCreateGroup}
-                  className="gap-1 text-gray-600 font-normal h-7 px-2"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  新建分组
-                </Button>
-             )}
-          </div>
-        </div>
+    <div className="h-12 px-3 flex items-center justify-between border-b border-gray-200 bg-white shrink-0">
+      <span className="text-sm font-semibold text-gray-700">片段区</span>
+      {!readOnly && (
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleCreateGroup} 
+          title="新建分组"
+          className="h-8 w-8 text-gray-500 hover:text-gray-900 p-0"
+        >
+          <Plus className="w-4 h-4" />
+        </Button>
+      )}
+    </div>
 
         <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
           {isCreatingGroup && (

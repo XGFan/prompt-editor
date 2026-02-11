@@ -122,22 +122,57 @@ const createAppStoreStateCreator = (options: ResolvedCreateAppStoreOptions): Sta
     state: createInitialAppState(),
     sessionUi: createInitialSessionUiState(),
 
-    createGroup: (params) => set((store) => ({ state: createGroup(store.state, params) })),
-    renameGroup: (params) => set((store) => ({ state: renameGroup(store.state, params) })),
-    deleteGroup: (params) => set((store) => ({ state: deleteGroup(store.state, params) })),
-    reorderGroup: (params) => set((store) => ({ state: reorderGroup(store.state, params) })),
-    toggleGroupCollapsed: (params) => set((store) => ({ state: toggleGroupCollapsed(store.state, params) })),
+    createGroup: async (params) => {
+      set((store) => ({ state: createGroup(store.state, params) }))
+      await get().save()
+    },
+    renameGroup: async (params) => {
+      set((store) => ({ state: renameGroup(store.state, params) }))
+      await get().save()
+    },
+    deleteGroup: async (params) => {
+      set((store) => ({ state: deleteGroup(store.state, params) }))
+      await get().save()
+    },
+    reorderGroup: async (params) => {
+      set((store) => ({ state: reorderGroup(store.state, params) }))
+      await get().save()
+    },
+    toggleGroupCollapsed: async (params) => {
+      set((store) => ({ state: toggleGroupCollapsed(store.state, params) }))
+      await get().save()
+    },
 
-    createPrompt: (params) => set((store) => ({ state: createPrompt(store.state, params) })),
-    editPromptContent: (params) => set((store) => ({ state: editPromptContent(store.state, params) })),
-    deletePrompt: (params) => set((store) => ({ state: deletePrompt(store.state, params) })),
-    reorderPromptWithinGroup: (params) => set((store) => ({ state: reorderPromptWithinGroup(store.state, params) })),
-    movePrompt: (params) => set((store) => ({ state: movePrompt(store.state, params) })),
-    duplicatePrompt: (params) => set((store) => ({ state: duplicatePrompt(store.state, params) })),
-    addLibraryPromptToFragments: (params) =>
+    createPrompt: async (params) => {
+      set((store) => ({ state: createPrompt(store.state, params) }))
+      await get().save()
+    },
+    editPromptContent: async (params) => {
+      set((store) => ({ state: editPromptContent(store.state, params) }))
+      await get().save()
+    },
+    deletePrompt: async (params) => {
+      set((store) => ({ state: deletePrompt(store.state, params) }))
+      await get().save()
+    },
+    reorderPromptWithinGroup: async (params) => {
+      set((store) => ({ state: reorderPromptWithinGroup(store.state, params) }))
+      await get().save()
+    },
+    movePrompt: async (params) => {
+      set((store) => ({ state: movePrompt(store.state, params) }))
+      await get().save()
+    },
+    duplicatePrompt: async (params) => {
+      set((store) => ({ state: duplicatePrompt(store.state, params) }))
+      await get().save()
+    },
+    addLibraryPromptToFragments: async (params) => {
       set((store) => ({
         state: addLibraryPromptToFragments(store.state, params),
-      })),
+      }))
+      await get().save()
+    },
 
     saveCurrentFragmentsAsSavedPrompt: async (params) => {
       set((store) => ({

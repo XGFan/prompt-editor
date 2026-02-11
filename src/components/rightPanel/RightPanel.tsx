@@ -29,7 +29,7 @@ export function RightPanel({ hideFinished = false, readOnly = false }: RightPane
 
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col h-full bg-white overflow-hidden">
-      <div className="px-2 pt-2 pb-0 bg-gray-50 border-b border-gray-200 shrink-0">
+      <div className="h-12 px-2 flex items-center bg-white border-b border-gray-200 shrink-0">
         <TabsList className={`grid w-full ${hideFinished ? 'grid-cols-1' : 'grid-cols-2'}`}>
           <TabsTrigger value="fragments" className="flex items-center gap-2">
             <BookOpen className="w-4 h-4" />
@@ -45,12 +45,12 @@ export function RightPanel({ hideFinished = false, readOnly = false }: RightPane
       </div>
 
       <div className="flex-1 overflow-hidden relative">
-          <TabsContent value="fragments" forceMount className="h-full w-full absolute inset-0">
+          <TabsContent value="fragments" forceMount className="mt-0 h-full w-full absolute inset-0">
              <LibraryPanel readOnly={readOnly} />
           </TabsContent>
 
           {!hideFinished && (
-            <TabsContent value="finished" forceMount className="h-full w-full absolute inset-0 bg-gray-50">
+            <TabsContent value="finished" forceMount className="mt-0 h-full w-full absolute inset-0 bg-gray-50">
               <SavedPromptsPanel />
             </TabsContent>
           )}

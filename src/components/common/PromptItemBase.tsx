@@ -48,21 +48,27 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
     const [editValue, setEditValue] = useState(content)
     const [deleteConfirm, setDeleteConfirm] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const deleteTimeoutRef = useRef<number | undefined>(undefined)
+    const internalRef = useRef<HTMLDivElement>(null)
     const autoEditHandledRef = useRef(false)
-
-    useEffect(() => {
-      return () => {
-        if (deleteTimeoutRef.current) clearTimeout(deleteTimeoutRef.current)
-      }
-    }, [])
+    const deleteTimeoutRef = useRef<number | null>(null)
 
     const adjustHeight = useCallback((_val?: string) => {
-      const el = textareaRef.current
-      if (!el) return
-      el.style.height = 'auto'
-      el.style.height = `${Math.min(el.scrollHeight, 120)}px`
+      if (!textareaRef.current) return
+      textareaRef.current.style.height = 'auto'
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`
     }, [])
+
+    const setRefs = useCallback(
+      (node: HTMLDivElement | null) => {
+        internalRef.current = node
+        if (typeof ref === 'function') {
+          ref(node)
+        } else if (ref) {
+          (ref as React.MutableRefObject<HTMLDivElement | null>).current = node
+        }
+      },
+      [ref],
+    )
 
     useEffect(() => {
       if (isEditing && textareaRef.current) {
@@ -163,10 +169,25 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
       }
     }
 
+    useEffect(() => {
+      if (!isEditing) return
+
+      const handleClickOutside = (event: MouseEvent) => {
+        if (internalRef.current && !internalRef.current.contains(event.target as Node)) {
+          handleCancel()
+        }
+      }
+
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }, [isEditing, handleCancel])
+
     if (isEditing) {
       return (
         <div
-          ref={ref}
+          ref={setRefs}
           style={style}
           className={cn('relative group p-2 rounded-md border border-blue-200 bg-white shadow-sm my-1', className)}
           {...props}
@@ -196,11 +217,11 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
 
     return (
       <div
-        ref={ref}
+        ref={setRefs}
         style={style}
         className={cn(
           'group relative flex gap-2 rounded-md border border-transparent px-2 py-2 text-sm transition-all hover:bg-gray-50 hover:shadow-sm',
-          isExpanded ? 'bg-gray-50 border-gray-100' : '',
+          // isExpanded ? 'bg-gray-50 border-gray-100' : '', // Removed selection highlight
           className,
         )}
         {...props}
@@ -235,9 +256,7 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
             <div
               className={cn(
                 'absolute right-0 bottom-0 flex items-center justify-end gap-1 rounded-md border border-gray-200 bg-white/95 px-1 py-0.5 shadow-sm backdrop-blur-sm opacity-0 transition-opacity',
-                deleteConfirm || isExpanded
-                  ? 'opacity-100 pointer-events-auto'
-                  : 'group-hover:opacity-100 group-focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto group-focus-within:pointer-events-auto',
+                'group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto',
               )}
             >
               {!deleteConfirm && (

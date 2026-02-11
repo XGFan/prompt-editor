@@ -41,12 +41,10 @@ describe('LibraryPanel', () => {
     render(
       <ToastProvider>
         <LibraryPanel />
-      </ToastProvider>
+      </ToastProvider>,
     );
 
-    expect(screen.getByText('暂无分组')).toBeInTheDocument();
-
-    const newGroupBtn = screen.getByText('新建');
+    const newGroupBtn = screen.getByText('新建分组');
     fireEvent.click(newGroupBtn);
 
     const input = screen.getByPlaceholderText('分组名称...');
@@ -64,13 +62,14 @@ describe('LibraryPanel', () => {
       </ToastProvider>
     );
 
-    fireEvent.click(screen.getByText('新建'));
+    screen.debug();
+    fireEvent.click(screen.getByText('新建分组'));
     const groupInput = screen.getByPlaceholderText('分组名称...');
     fireEvent.change(groupInput, { target: { value: 'My Prompts' } });
     fireEvent.blur(groupInput);
 
-    const addPromptBtns = screen.getAllByTitle('添加提示词');
-    fireEvent.click(addPromptBtns[0]);
+    const addPromptBtn = screen.getByTitle('新建片段');
+    fireEvent.click(addPromptBtn);
 
     const textarea = screen.getByPlaceholderText('输入内容...');
     fireEvent.change(textarea, { target: { value: 'Hello World' } });
