@@ -46,7 +46,7 @@ describe('LibraryPanel', () => {
 
     expect(screen.getByText('暂无分组')).toBeInTheDocument();
 
-    const newGroupBtn = screen.getByText('新建分组');
+    const newGroupBtn = screen.getByText('新建');
     fireEvent.click(newGroupBtn);
 
     const input = screen.getByPlaceholderText('分组名称...');
@@ -64,7 +64,7 @@ describe('LibraryPanel', () => {
       </ToastProvider>
     );
 
-    fireEvent.click(screen.getByText('新建分组'));
+    fireEvent.click(screen.getByText('新建'));
     const groupInput = screen.getByPlaceholderText('分组名称...');
     fireEvent.change(groupInput, { target: { value: 'My Prompts' } });
     fireEvent.blur(groupInput);
@@ -97,7 +97,7 @@ describe('LibraryPanel', () => {
     expect(screen.getByText('Apple Pie')).toBeInTheDocument();
     expect(screen.getByText('Banana Bread')).toBeInTheDocument();
 
-    const searchInput = screen.getByPlaceholderText('搜索提示词...');
+    const searchInput = screen.getByPlaceholderText(/搜索 Search Test/);
     fireEvent.change(searchInput, { target: { value: 'Apple' } });
 
     const highlighted = screen.getByText('Apple');

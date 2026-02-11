@@ -3,7 +3,6 @@ import { useAppStoreSelector, useCurrentAppStoreApi } from '../../store/hooks';
 import { exportLibraryToJson, importLibraryFromJson, previewLibraryJson } from '../../domain/libraryIo';
 import { SortableLibraryItem } from './SortableLibraryItem';
 import { Button, IconButton } from '../ui/Button';
-import { Input } from '../ui/Input';
 import { Dialog } from '../ui/Dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
 import { useToast } from '../ui/Toast';
@@ -574,44 +573,27 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
       autoScroll
     >
       <div className="flex flex-col h-full bg-white border-r border-gray-200">
-        <div className="flex flex-col gap-2 p-3 border-b border-gray-100 bg-gray-50/50">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                ref={searchInputRef}
-                placeholder="搜索提示词..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-8"
-              />
-            </div>
-            <div className="flex items-center">
-              {!readOnly && (
-                <IconButton onClick={handleImportClick} title="导入数据" size="sm">
-                  <Upload className="w-4 h-4" />
-                </IconButton>
-              )}
-              <IconButton onClick={handleExport} title="导出数据" size="sm">
-                <Download className="w-4 h-4" />
+        <div className="flex-1 min-h-0 overflow-hidden relative">
+          <div className="absolute right-4 bottom-4 flex flex-col gap-2 z-20">
+            {!readOnly && (
+              <IconButton 
+                onClick={handleImportClick} 
+                title="导入数据" 
+                size="md"
+                className="bg-white shadow-md border border-gray-200 hover:bg-gray-50 rounded-full h-10 w-10"
+              >
+                <Upload className="w-5 h-5" />
               </IconButton>
-            </div>
-          </div>
-          
-          {!readOnly && (
-            <Button 
-              variant="secondary" 
-              size="sm" 
-              onClick={handleCreateGroup}
-              className="w-full justify-start gap-2 text-gray-600 font-normal"
+            )}
+            <IconButton 
+              onClick={handleExport} 
+              title="导出数据" 
+              size="md"
+              className="bg-white shadow-md border border-gray-200 hover:bg-gray-50 rounded-full h-10 w-10"
             >
-              <Plus className="w-4 h-4" />
-              新建分组
-            </Button>
-          )}
-        </div>
-
-        <div className="flex-1 min-h-0 overflow-hidden">
+              <Download className="w-5 h-5" />
+            </IconButton>
+          </div>
           {isCreatingGroup && (
             <div className="p-2 border-b border-blue-100 bg-blue-50/30">
               <input
@@ -634,39 +616,50 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
             </div>
           )}
 
+
           {groupOrder.length > 0 && activeGroupId && (
-            <div className="flex flex-1 overflow-hidden min-h-0">
+            <div className="flex flex-1 overflow-hidden min-h-0 h-full">
               <Tabs
                 orientation="vertical"
                 value={activeGroupId}
                 onValueChange={setActiveGroupId}
-                className="flex flex-1 min-h-0 overflow-hidden"
+                className="flex flex-1 min-h-0 overflow-hidden h-full"
               >
-                <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
-                  <TabsList className="h-full w-[240px] shrink-0 flex-col items-stretch justify-start gap-1 overflow-y-auto rounded-none border-r border-gray-100 bg-gray-50/60 py-2 px-2 custom-scrollbar z-10">
-                    {groupOrder.map((groupId) => {
-                      const group = state.library.groups[groupId];
-                      if (!group) return null;
+                <div className="flex flex-col w-[180px] border-r border-gray-200 h-full bg-gray-50/50 shrink-0">
+                  <div className="flex items-center justify-between px-2 h-9 shrink-0 border-b border-gray-200/50">
+                    <span className="text-xs font-semibold text-gray-500 pl-1">分组</span>
+                    {!readOnly && (
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-gray-500 hover:text-gray-900" onClick={handleCreateGroup} title="新建分组">
+                        <Plus className="w-3.5 h-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
+                    <TabsList className="flex-1 w-full flex-col items-stretch justify-start gap-0.5 overflow-y-auto p-1 custom-scrollbar border-0 bg-transparent">
+                      {groupOrder.map((groupId) => {
+                        const group = state.library.groups[groupId];
+                        if (!group) return null;
 
-                      return (
-                        <LibraryTabRow
-                          key={groupId}
-                          groupId={groupId}
-                          groupName={group.name}
-                          count={visiblePromptsByGroup[groupId]?.length ?? 0}
-                          readOnly={readOnly}
-                          isMenuOpen={menuOpenGroupId === groupId}
-                          isDeleteConfirm={deleteConfirmGroupId === groupId}
-                          onCreatePrompt={handleCreatePromptInGroup}
-                          onToggleMenu={handleToggleGroupMenu}
-                          onDeleteGroup={handleDeleteGroupFromMenu}
-                        />
-                      );
-                    })}
-                  </TabsList>
-                </SortableContext>
+                        return (
+                          <LibraryTabRow
+                            key={groupId}
+                            groupId={groupId}
+                            groupName={group.name}
+                            count={visiblePromptsByGroup[groupId]?.length ?? 0}
+                            readOnly={readOnly}
+                            isMenuOpen={menuOpenGroupId === groupId}
+                            isDeleteConfirm={deleteConfirmGroupId === groupId}
+                            onCreatePrompt={handleCreatePromptInGroup}
+                            onToggleMenu={handleToggleGroupMenu}
+                            onDeleteGroup={handleDeleteGroupFromMenu}
+                          />
+                        );
+                      })}
+                    </TabsList>
+                  </SortableContext>
+                </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                <div className="flex flex-col flex-1 min-w-0 h-full overflow-hidden bg-white">
                   {groupOrder.map((groupId) => {
                     const group = state.library.groups[groupId];
                     if (!group) return null;
@@ -677,26 +670,64 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                       <TabsContent
                         key={groupId}
                         value={groupId}
-                        className="h-full px-2 py-2"
+                        className="flex flex-col h-full flex-1 m-0 p-0 min-h-0"
                       >
-                        <div className="flex flex-col gap-0.5 min-h-[4px]">
-                          <SortableContext items={visiblePrompts.map((prompt) => prompt.id)} strategy={verticalListSortingStrategy}>
-                            {visiblePrompts.map((prompt) => (
-                              <SortableLibraryItem
-                                key={prompt.id}
-                                prompt={prompt}
-                                groupId={group.id}
-                                readOnly={readOnly}
-                                searchQuery={searchQuery}
-                              />
-                            ))}
-                          </SortableContext>
-
-                          {visiblePrompts.length === 0 && (
-                            <div className="px-8 py-2 text-xs text-gray-400 italic">
-                              {searchQuery ? '无匹配提示词' : '暂无提示词'}
-                            </div>
+                        <div className="flex items-center gap-2 px-3 h-10 shrink-0 border-b border-gray-100">
+                          <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+                            <input
+                              type="text"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              placeholder={`搜索 ${group.name}...`}
+                              className="w-full h-8 pl-8 pr-2 text-xs bg-gray-50 border-0 rounded-md focus:ring-1 focus:ring-blue-500/50 focus:bg-white transition-colors placeholder:text-gray-400"
+                            />
+                          </div>
+                          {!readOnly && (
+                            <Button 
+                              size="sm" 
+                              variant="primary" 
+                              className="h-8 px-3 text-xs gap-1.5 shadow-sm whitespace-nowrap"
+                              onClick={() => handleCreatePromptInGroup(groupId)}
+                            >
+                              <Plus className="w-3.5 h-3.5" />
+                              新建片段
+                            </Button>
                           )}
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-2 custom-scrollbar">
+                          <div className="flex flex-col gap-0.5 min-h-[4px]">
+                            <SortableContext items={visiblePrompts.map((prompt) => prompt.id)} strategy={verticalListSortingStrategy}>
+                              {visiblePrompts.map((prompt) => (
+                                <SortableLibraryItem
+                                  key={prompt.id}
+                                  prompt={prompt}
+                                  groupId={group.id}
+                                  readOnly={readOnly}
+                                  searchQuery={searchQuery}
+                                />
+                              ))}
+                            </SortableContext>
+
+                            {visiblePrompts.length === 0 && (
+                              <div className="flex flex-col items-center justify-center py-12 text-gray-400 gap-2">
+                                {searchQuery ? (
+                                  <>
+                                    <Search className="w-8 h-8 opacity-20" />
+                                    <span className="text-xs">无匹配结果</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="w-8 h-8 rounded-lg border border-dashed border-gray-200 flex items-center justify-center">
+                                      <Plus className="w-4 h-4 opacity-30" />
+                                    </div>
+                                    <span className="text-xs">暂无片段</span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </TabsContent>
                     );
