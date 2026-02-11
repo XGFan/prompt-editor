@@ -81,84 +81,110 @@ function LibraryTabRow({
         transform: CSS.Translate.toString(transform),
         transition,
         opacity: isDragging ? 0.4 : 1,
+        zIndex: isDragging ? 50 : 'auto',
       }}
-      className={`group relative flex items-center gap-1 rounded-md p-1 ${isOver && !isDragging ? 'bg-blue-50' : ''}`}
+      className={`group relative flex items-center h-9 my-0.5 rounded-r-md transition-all ${
+        isOver && !isDragging ? 'bg-blue-50' : ''
+      }`}
       data-testid={`library-group-${groupName}`}
     >
-      {!readOnly && (
-        <div
-          {...attributes}
-          {...listeners}
-          className="shrink-0 p-1 rounded cursor-grab active:cursor-grabbing text-gray-400 hover:bg-gray-100"
-          data-testid={`library-drag-handle-group-${groupId}`}
-        >
-          <GripVertical className="w-3.5 h-3.5" />
-        </div>
-      )}
-
-      <TabsTrigger
-        value={groupId}
-        data-testid={`library-tab-${groupId}`}
-        title={groupName}
-        className="flex-1 justify-between gap-2 rounded-md px-2 py-1.5 text-xs"
-      >
-        <span className="truncate">{groupName}</span>
-        <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-500">{count}</span>
-      </TabsTrigger>
-
-      {!readOnly && (
-        <>
-          <IconButton
-            size="sm"
-            title="添加提示词"
-            onClick={(e) => {
-              e.stopPropagation();
-              onCreatePrompt(groupId);
-            }}
+      <div className="flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto focus-within:pointer-events-auto transition-opacity absolute left-0 top-0 z-20 h-full w-auto min-w-[240px] items-center gap-1 rounded-r-md bg-white pr-2 shadow-xl ring-1 ring-gray-200">
+        {!readOnly && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="shrink-0 p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
+            data-testid={`library-drag-handle-group-expanded-${groupId}`}
           >
-            <Plus className="w-3.5 h-3.5" />
-          </IconButton>
+            <GripVertical className="w-3.5 h-3.5" />
+          </div>
+        )}
 
-          <div className="relative">
+        <TabsTrigger
+          value={groupId}
+          className="flex-1 justify-start gap-2 rounded-md px-2 py-1.5 text-xs text-left"
+          title={groupName}
+        >
+          <span className="font-medium truncate max-w-[140px]">{groupName}</span>
+          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">{count}</span>
+        </TabsTrigger>
+
+        {!readOnly && (
+          <div className="flex items-center gap-0.5">
             <IconButton
               size="sm"
-              title="菜单"
+              title="添加提示词"
               onClick={(e) => {
                 e.stopPropagation();
-                onToggleMenu(groupId);
+                onCreatePrompt(groupId);
               }}
             >
-              <MoreHorizontal className="w-3.5 h-3.5" />
+              <Plus className="w-3.5 h-3.5" />
             </IconButton>
 
-            {isMenuOpen && (
-              <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-gray-100 bg-white py-1 shadow-lg">
-                <button
-                  type="button"
-                  className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 ${
-                    isDeleteConfirm ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'
-                  }`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDeleteGroup(groupId);
-                  }}
-                >
-                  {isDeleteConfirm ? (
-                    <span className="font-bold whitespace-nowrap">
-                      {count > 0 ? `确认删除（将删除 ${count} 条）` : '确认删除'}
-                    </span>
-                  ) : (
-                    <>
-                      <Trash2 className="w-3.5 h-3.5" />
-                      删除
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
+            <div className="relative">
+              <IconButton
+                size="sm"
+                title="菜单"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleMenu(groupId);
+                }}
+              >
+                <MoreHorizontal className="w-3.5 h-3.5" />
+              </IconButton>
+
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-md border border-gray-100 bg-white py-1 shadow-lg">
+                  <button
+                    type="button"
+                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 ${
+                      isDeleteConfirm ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'
+                    }`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteGroup(groupId);
+                    }}
+                  >
+                    {isDeleteConfirm ? (
+                      <span className="font-bold whitespace-nowrap">
+                        {count > 0 ? `确认删除（${count}）` : '确认删除'}
+                      </span>
+                    ) : (
+                      <>
+                        <Trash2 className="w-3.5 h-3.5" />
+                        删除
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-        </>
-      )}
+        )}
+      </div>
+
+      <div className="flex w-full items-center gap-1 pr-1 group-hover:opacity-0">
+        {!readOnly && (
+          <div
+            {...attributes}
+            {...listeners}
+            className="shrink-0 p-1.5 cursor-grab text-gray-300"
+            data-testid={`library-drag-handle-group-${groupId}`}
+          >
+            <GripVertical className="w-3.5 h-3.5" />
+          </div>
+        )}
+
+        <TabsTrigger
+          value={groupId}
+          data-testid={`library-tab-${groupId}`}
+          className="flex-1 justify-between gap-1 rounded-r-md px-1 py-1.5 text-xs overflow-hidden"
+        >
+          <span className="truncate max-w-[4em]">{groupName}</span>
+          <span className="shrink-0 text-[10px] text-gray-400 font-mono">{count}</span>
+        </TabsTrigger>
+      </div>
     </div>
   );
 }
@@ -631,7 +657,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                 className="flex flex-1 min-h-0 overflow-hidden"
               >
                 <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
-                  <TabsList className="h-full w-[280px] shrink-0 flex-col items-stretch justify-start gap-1 overflow-y-auto rounded-none border-r border-gray-100 bg-gray-50/60 p-2 custom-scrollbar">
+                  <TabsList className="h-full w-[110px] shrink-0 flex-col items-stretch justify-start gap-1 overflow-y-auto overflow-x-visible rounded-none border-r border-gray-100 bg-gray-50/60 py-2 pl-2 pr-0 custom-scrollbar z-10">
                     {groupOrder.map((groupId) => {
                       const group = state.library.groups[groupId];
                       if (!group) return null;
