@@ -34,6 +34,26 @@ export interface PromptEditorValue {
 }
 
 /**
+ * onSave 回传给宿主的保存数据（最小集合）：
+ * - fragments：编辑内容主体
+ * - promptText：根据当前格式生成的提示词文本
+ * - version / meta：宿主扩展位（透传）
+ *
+ * 不含 library（走 onLibraryChange 独立通道）、
+ * 不含 ui / sessionUi（编辑器内部状态，不属于保存语义）。
+ */
+export interface PromptEditorSaveData {
+  /** 编辑内容主体 */
+  fragments: FragmentState
+  /** 根据当前格式生成的提示词文本 */
+  promptText: string
+  /** 可选扩展版本（透传自 props.value） */
+  version?: string | number
+  /** 可选扩展元信息（透传自 props.value） */
+  meta?: Record<string, unknown>
+}
+
+/**
  * 保存前校验输入（SDK 内部构造）：
  * - 包含 fragments（保存主体）
  * - 包含 library（供完整结构校验与宿主校验使用）
@@ -72,12 +92,12 @@ export interface PromptEditorValidationResult {
 export type PromptEditorSaveResult =
   | {
       ok: true
-      value: PromptEditorValue
+      value: PromptEditorSaveData
       meta?: Record<string, unknown>
     }
   | {
       ok: false
-      value: PromptEditorValue
+      value: PromptEditorSaveData
       error: PromptEditorError
       errors?: PromptEditorError[]
       meta?: Record<string, unknown>
@@ -110,8 +130,8 @@ export interface PromptEditorSDKProps {
   /** library 变更事件（独立通道） */
   onLibraryChange?: (nextLibrary: PromptEditorLibrary) => void
 
-  /** 保存意图事件（回传完整编辑快照；组件不落库） */
-  onSave: (finalValue: PromptEditorValue) => void | Promise<PromptEditorSaveResult | void>
+  /** 保存意图事件（回传保存数据；组件不落库） */
+  onSave: (finalValue: PromptEditorSaveData) => void | Promise<PromptEditorSaveResult | void>
 
   /** 取消意图事件 */
   onCancel: () => void

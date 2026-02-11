@@ -23,6 +23,7 @@ import type {
   PromptEditorLibrary,
   PromptEditorSDKHandle,
   PromptEditorSDKProps,
+  PromptEditorSaveData,
   PromptEditorSaveResult,
   PromptEditorValidationInput,
   PromptEditorValue,
@@ -50,6 +51,14 @@ const READ_ONLY_ERROR: PromptEditorError = {
 }
 
 const FORMAT_PREFERENCE_KEY = 'prompt_editor_format_preference'
+
+/** 从 PromptEditorValue 中提取 onSave 契约所需的最小保存数据 */
+const toSaveData = (v: PromptEditorValue): PromptEditorSaveData => ({
+  fragments: v.fragments,
+  promptText: v.promptText ?? '',
+  ...(v.version !== undefined && { version: v.version }),
+  ...(v.meta !== undefined && { meta: v.meta }),
+})
 
 const buildValueFromStore = (
   store: AppStore,
@@ -230,7 +239,7 @@ function PromptEditorSDKInner(
       latestOnErrorRef.current?.(READ_ONLY_ERROR)
       return {
         ok: false,
-        value: getValue(),
+        value: toSaveData(getValue()),
         error: READ_ONLY_ERROR,
         errors: [READ_ONLY_ERROR],
       }
@@ -250,20 +259,27 @@ function PromptEditorSDKInner(
       latestOnErrorRef.current?.(error)
       return {
         ok: false,
-        value: snapshot,
+        value: toSaveData(snapshot),
         error,
         errors: validationResult.errors,
       }
     }
 
     try {
-      const hostResult = await latestOnSaveRef.current(validationResult.value)
+      const { fragments, promptText, version, meta } = validationResult.value
+      const saveData: PromptEditorSaveData = {
+        fragments,
+        promptText: promptText ?? '',
+        ...(version !== undefined && { version }),
+        ...(meta !== undefined && { meta }),
+      }
+      const hostResult = await latestOnSaveRef.current(saveData)
       if (hostResult && typeof hostResult === 'object' && 'ok' in hostResult) {
         return hostResult
       }
       return {
         ok: true,
-        value: validationResult.value,
+        value: saveData,
       }
     } catch (cause) {
       const error: PromptEditorError = {
@@ -273,7 +289,7 @@ function PromptEditorSDKInner(
       latestOnErrorRef.current?.(error)
       return {
         ok: false,
-        value: snapshot,
+        value: toSaveData(snapshot),
         error,
       }
     }

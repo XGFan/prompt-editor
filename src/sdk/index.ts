@@ -4,6 +4,7 @@ export type {
   PromptEditorError,
   PromptEditorSDKHandle,
   PromptEditorLibrary,
+  PromptEditorSaveData,
   PromptEditorSaveResult,
   PromptEditorSDKProps,
   PromptEditorValidate,
