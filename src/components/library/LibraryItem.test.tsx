@@ -54,7 +54,7 @@ describe('LibraryItem Highlighting', () => {
     expect(screen.getByText('\\')).toHaveClass('bg-yellow-200');
   });
 
-  it('should normalize content by replacing newlines with spaces during edit', () => {
+  it('should preserve newlines during edit', () => {
     render(
       <ToastProvider>
         <LibraryItem prompt={mockPrompt} groupId="group-1" />
@@ -65,7 +65,7 @@ describe('LibraryItem Highlighting', () => {
     const textarea = screen.getByPlaceholderText('输入内容...') as HTMLTextAreaElement;
 
     fireEvent.change(textarea, { target: { value: 'Line 1\nLine 2' } });
-    expect(textarea.value).toBe('Line 1 Line 2');
+    expect(textarea.value).toBe('Line 1\nLine 2');
   });
 
   it('should save on Enter and handle single-line semantics', () => {

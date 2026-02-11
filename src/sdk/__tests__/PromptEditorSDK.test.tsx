@@ -89,7 +89,7 @@ describe('PromptEditorSDK', () => {
 
     expect(result?.ok).toBe(true)
     if (result?.ok) {
-      expect(result.value.prompts[pid('lib-prompt-1')]?.content).toBe('Edited library prompt')
+      expect(result.value.fragments.prompts[pid('lib-prompt-1')]?.content).toBe('Edited library prompt')
     }
     expect(onLibraryChangeSpy).not.toHaveBeenCalled()
   })
@@ -145,7 +145,7 @@ describe('PromptEditorSDK', () => {
 
     expect(result?.ok).toBe(true)
     if (result?.ok) {
-      expect(result.value.prompts[pid('lib-prompt-1')]?.content).toBe('Library prompt before edit')
+      expect(result.value.fragments.prompts[pid('lib-prompt-1')]?.content).toBe('Library prompt before edit')
     }
     expect(onSave).toHaveBeenCalledTimes(1)
   })

@@ -6,10 +6,41 @@ import { IconButton } from '../ui/Button';
 import { useToast } from '../ui/Toast';
 import { Tabs, TabsList, TabsTrigger } from '../ui/Tabs';
 
-export function PromptTextPanel() {
+const FORMAT_PREFERENCE_KEY = 'prompt_editor_format_preference';
+
+interface PromptTextPanelProps {
+  lockedFormat?: PromptFormat;
+}
+
+export function PromptTextPanel({ lockedFormat }: PromptTextPanelProps) {
   const fragments = useAppStoreSelector((s) => s.state.fragments);
   const { showToast } = useToast();
-  const [format, setFormat] = useState<PromptFormat>('markdown');
+  
+  const [internalFormat, setInternalFormat] = useState<PromptFormat>(() => {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(FORMAT_PREFERENCE_KEY) : null;
+      if (saved === 'markdown' || saved === 'yaml' || saved === 'xml') {
+        return saved as PromptFormat;
+      }
+    } catch (e) {
+      //
+    }
+    return 'markdown';
+  });
+
+  const format = lockedFormat || internalFormat;
+
+  const handleFormatChange = useCallback((v: string) => {
+    const next = v as PromptFormat;
+    setInternalFormat(next);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem(FORMAT_PREFERENCE_KEY, next);
+      }
+    } catch (e) {
+      //
+    }
+  }, []);
 
   const promptText = useMemo(() => buildPromptText(fragments, format), [fragments, format]);
   const isEmpty = promptText.trim().length === 0;
@@ -33,31 +64,33 @@ export function PromptTextPanel() {
         </h2>
         
         <div className="flex items-center gap-2">
-          <Tabs value={format} onValueChange={(v) => setFormat(v as PromptFormat)}>
-            <TabsList className="h-7">
-              <TabsTrigger 
-                value="markdown" 
-                className="text-xs px-2 py-0.5 h-6"
-                data-testid="prompt-text-format-markdown"
-              >
-                Markdown
-              </TabsTrigger>
-              <TabsTrigger 
-                value="yaml" 
-                className="text-xs px-2 py-0.5 h-6"
-                data-testid="prompt-text-format-yaml"
-              >
-                YAML
-              </TabsTrigger>
-              <TabsTrigger 
-                value="xml" 
-                className="text-xs px-2 py-0.5 h-6"
-                data-testid="prompt-text-format-xml"
-              >
-                XML
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          {!lockedFormat && (
+            <Tabs value={format} onValueChange={handleFormatChange}>
+              <TabsList className="h-7">
+                <TabsTrigger 
+                  value="markdown" 
+                  className="text-xs px-2 py-0.5 h-6"
+                  data-testid="prompt-text-format-markdown"
+                >
+                  Markdown
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="yaml" 
+                  className="text-xs px-2 py-0.5 h-6"
+                  data-testid="prompt-text-format-yaml"
+                >
+                  YAML
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="xml" 
+                  className="text-xs px-2 py-0.5 h-6"
+                  data-testid="prompt-text-format-xml"
+                >
+                  XML
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
 
           <IconButton
             onClick={handleCopy}

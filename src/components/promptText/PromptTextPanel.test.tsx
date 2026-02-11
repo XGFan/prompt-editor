@@ -68,17 +68,17 @@ describe('PromptTextPanel', () => {
     fireEvent.click(screen.getByTestId('prompt-text-format-yaml'));
     const textPanel = screen.getByTestId('prompt-text');
     
-    // YAML format expectation (Group 1:\n  - hello;)
+    // YAML format expectation (Group 1:\n  - hello)
     expect(textPanel).toHaveTextContent('Group 1:');
-    expect(textPanel).toHaveTextContent('- hello;');
+    expect(textPanel).toHaveTextContent('- hello');
 
     // Switch to XML
     fireEvent.click(screen.getByTestId('prompt-text-format-xml'));
     
-    // XML format expectation (<group name="Group 1">\n    <snippet>hello;</snippet>)
+    // XML format expectation (<group name="Group 1">\n    <snippet>hello</snippet>)
     expect(textPanel).toHaveTextContent('<prompts>');
     expect(textPanel).toHaveTextContent('<group name="Group 1">');
-    expect(textPanel).toHaveTextContent('<snippet>hello;</snippet>');
+    expect(textPanel).toHaveTextContent('<snippet>hello</snippet>');
   });
 
   it('copies content in current format', async () => {
@@ -102,6 +102,6 @@ describe('PromptTextPanel', () => {
     fireEvent.click(copyButton);
 
     expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('Group 1:'));
-    expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('- hello;'));
+    expect(mockWriteText).toHaveBeenCalledWith(expect.stringContaining('- hello'));
   });
 });

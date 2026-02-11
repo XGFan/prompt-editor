@@ -42,33 +42,33 @@ test.describe('prompt text panel', () => {
 
     // 1. Markdown Format (Default)
     await expect(promptText).toContainText('##Group A');
-    await expect(promptText).toContainText('Hello Prompt;');
+    await expect(promptText).toContainText('Hello Prompt');
 
     await copyButton.click();
     await expect(page.getByText('已复制').first()).toBeVisible();
     let clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardContent).toBe('##Group A\nHello Prompt;');
+    expect(clipboardContent).toBe('##Group A\nHello Prompt');
 
     // 2. YAML Format
     await page.getByTestId('prompt-text-format-yaml').click();
     await expect(promptText).toContainText('Group A:');
-    await expect(promptText).toContainText('- Hello Prompt;');
+    await expect(promptText).toContainText('- Hello Prompt');
     await expect(promptText).not.toContainText('##Group A');
 
     await copyButton.click();
     await expect(page.getByText('已复制').first()).toBeVisible();
     clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardContent).toBe('Group A:\n  - Hello Prompt;');
+    expect(clipboardContent).toBe('Group A:\n  - Hello Prompt');
 
     // 3. XML Format
     await page.getByTestId('prompt-text-format-xml').click();
     await expect(promptText).toContainText('<prompts>');
-    await expect(promptText).toContainText('<snippet>Hello Prompt;</snippet>');
+    await expect(promptText).toContainText('<snippet>Hello Prompt</snippet>');
 
     await copyButton.click();
     await expect(page.getByText('已复制').first()).toBeVisible();
     clipboardContent = await page.evaluate(() => navigator.clipboard.readText());
-    expect(clipboardContent).toBe('<prompts>\n  <group name="Group A">\n    <snippet>Hello Prompt;</snippet>\n  </group>\n</prompts>');
+    expect(clipboardContent).toBe('<prompts>\n  <group name="Group A">\n    <snippet>Hello Prompt</snippet>\n  </group>\n</prompts>');
 
   });
 });

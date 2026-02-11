@@ -48,7 +48,7 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
     const [editValue, setEditValue] = useState(content)
     const [deleteConfirm, setDeleteConfirm] = useState(false)
     const textareaRef = useRef<HTMLTextAreaElement>(null)
-    const deleteTimeoutRef = useRef<number>()
+    const deleteTimeoutRef = useRef<number | undefined>(undefined)
     const autoEditHandledRef = useRef(false)
 
     useEffect(() => {
@@ -89,7 +89,7 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
     }, [itemKey, content, isEditing, readOnly])
 
     const handleEditChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const val = e.target.value.replace(/[\r\n]+/g, ' ')
+      const val = e.target.value
       setEditValue(val)
     }
 
@@ -178,7 +178,7 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
             onChange={handleEditChange}
             onKeyDown={handleKeyDown}
             rows={1}
-            className="w-full text-sm resize-none outline-none bg-transparent overflow-hidden leading-5"
+            className="w-full text-sm resize-none outline-none bg-transparent overflow-y-auto leading-5"
             placeholder="输入内容..."
             style={{ maxHeight: '120px' }}
           />

@@ -10,6 +10,7 @@ import React, {
 import { FragmentsPanel } from '../components/fragments/FragmentsPanel'
 import { Splitter } from '../components/layout/Splitter'
 import { PromptTextPanel } from '../components/promptText/PromptTextPanel'
+import { buildPromptText } from '../components/promptText/buildPromptText'
 import { RightPanel } from '../components/rightPanel/RightPanel'
 import { ShortcutHelp } from '../components/ui/ShortcutHelp'
 import { ToastProvider } from '../components/ui/Toast'
@@ -48,34 +49,65 @@ const READ_ONLY_ERROR: PromptEditorError = {
   severity: 'error',
 }
 
+const FORMAT_PREFERENCE_KEY = 'prompt_editor_format_preference'
+
 const buildValueFromStore = (
   store: AppStore,
   fallback: PromptEditorValue,
-): PromptEditorValue => ({
-  fragments: store.state.fragments,
-  ui: store.state.ui,
-  sessionUi: store.sessionUi,
-  version: fallback.version,
-  meta: fallback.meta,
-})
+  format?: 'markdown' | 'yaml' | 'xml',
+): PromptEditorValue => {
+  let resolvedFormat = format
+  if (!resolvedFormat) {
+    try {
+      const saved = typeof window !== 'undefined' ? localStorage.getItem(FORMAT_PREFERENCE_KEY) : null
+      if (saved === 'markdown' || saved === 'yaml' || saved === 'xml') {
+        resolvedFormat = saved as 'markdown' | 'yaml' | 'xml'
+      }
+    } catch (e) {
+      //
+    }
+  }
+  if (!resolvedFormat) resolvedFormat = 'markdown'
+
+  return {
+    fragments: store.state.fragments,
+    ui: store.state.ui,
+    sessionUi: store.sessionUi,
+    version: fallback.version,
+    meta: fallback.meta,
+    promptText: buildPromptText(store.state.fragments, resolvedFormat),
+  }
+}
 
 const buildValidationInputFromStore = (
   store: AppStore,
   fallback: PromptEditorValue,
   fallbackLibrary: PromptEditorLibrary,
+  format?: 'markdown' | 'yaml' | 'xml',
 ): PromptEditorValidationInput => ({
   library: (store.state.library as PromptEditorLibrary) ?? fallbackLibrary,
-  ...buildValueFromStore(store, fallback),
+  ...buildValueFromStore(store, fallback, format),
 })
 
 function PromptEditorSDKInner(
-  { value, initialLibrary, disabled = false, readOnly = false, onLibraryChange, onSave, onCancel, onError, validate }: PromptEditorSDKProps,
+  {
+    value,
+    initialLibrary,
+    disabled = false,
+    readOnly = false,
+    format,
+    onLibraryChange,
+    onSave,
+    onCancel,
+    onError,
+    validate,
+  }: PromptEditorSDKProps,
   ref: React.ForwardedRef<PromptEditorSDKHandle>,
 ) {
   const sdkReadOnly = Boolean(disabled || readOnly)
   const storeApi = useCurrentAppStoreApi()
   const containerRef = useRef<HTMLDivElement>(null)
-  const requestRef = useRef<number>()
+  const requestRef = useRef<number | undefined>(undefined)
   const pendingDelta = useRef({ fragments: 0, library: 0 })
   const isSyncingFromPropsRef = useRef(false)
   const latestValueRef = useRef<PromptEditorValue>(value)
@@ -99,8 +131,8 @@ function PromptEditorSDKInner(
   latestInitialLibraryRef.current = initialLibrary
 
   const getValue = useCallback((): PromptEditorValue => {
-    return buildValueFromStore(storeApi.getState(), latestValueRef.current)
-  }, [storeApi])
+    return buildValueFromStore(storeApi.getState(), latestValueRef.current, format)
+  }, [storeApi, format])
 
   useLayoutEffect(() => {
     if (hasInitializedLibraryRef.current) {
@@ -198,7 +230,7 @@ function PromptEditorSDKInner(
       latestOnErrorRef.current?.(READ_ONLY_ERROR)
       return {
         ok: false,
-        value: getValue().fragments,
+        value: getValue(),
         error: READ_ONLY_ERROR,
         errors: [READ_ONLY_ERROR],
       }
@@ -209,6 +241,7 @@ function PromptEditorSDKInner(
       storeApi.getState(),
       snapshot,
       latestInitialLibraryRef.current,
+      format,
     )
     const validationResult = await validatePromptEditorBeforeSave(validationInput, latestValidateRef.current)
 
@@ -217,20 +250,20 @@ function PromptEditorSDKInner(
       latestOnErrorRef.current?.(error)
       return {
         ok: false,
-        value: snapshot.fragments,
+        value: snapshot,
         error,
         errors: validationResult.errors,
       }
     }
 
     try {
-      const hostResult = await latestOnSaveRef.current(validationResult.value.fragments)
+      const hostResult = await latestOnSaveRef.current(validationResult.value)
       if (hostResult && typeof hostResult === 'object' && 'ok' in hostResult) {
         return hostResult
       }
       return {
         ok: true,
-        value: validationResult.value.fragments,
+        value: validationResult.value,
       }
     } catch (cause) {
       const error: PromptEditorError = {
@@ -240,11 +273,11 @@ function PromptEditorSDKInner(
       latestOnErrorRef.current?.(error)
       return {
         ok: false,
-        value: snapshot.fragments,
+        value: snapshot,
         error,
       }
     }
-  }, [getValue, storeApi])
+  }, [getValue, storeApi, format])
 
   const requestCancel = useCallback(() => {
     latestOnCancelRef.current()
@@ -305,7 +338,7 @@ function PromptEditorSDKInner(
         data-testid="panel-text"
         className="flex-1 min-w-[360px] bg-white border-r border-gray-200 overflow-hidden"
       >
-        <PromptTextPanel />
+        <PromptTextPanel lockedFormat={format} />
       </main>
 
       {!sdkReadOnly && (

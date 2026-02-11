@@ -5,6 +5,7 @@ import {
   type PromptEditorError,
   type PromptEditorLibrary,
   type PromptEditorSDKProps,
+  type PromptEditorSaveResult,
   type PromptEditorValue,
 } from '../index'
 
@@ -84,10 +85,10 @@ describe('sdk contract', () => {
 
   it('supports save/cancel and library callback signatures at runtime sanity level', async () => {
     const nextLibrary = buildLibrary()
-    const finalFragments = buildValue().fragments
+    const finalValue = buildValue()
 
     const onLibraryChange: PromptEditorSDKProps['onLibraryChange'] = vi.fn()
-    const onSave: PromptEditorSDKProps['onSave'] = vi.fn(async (value) => ({
+    const onSave: PromptEditorSDKProps['onSave'] = vi.fn(async (value): Promise<PromptEditorSaveResult> => ({
       ok: true,
       value,
       meta: { persistedBy: 'host' },
@@ -95,14 +96,14 @@ describe('sdk contract', () => {
     const onCancel: PromptEditorSDKProps['onCancel'] = vi.fn()
 
     onLibraryChange?.(nextLibrary)
-    const saveResult = await onSave(finalFragments)
+    const saveResult = await onSave(finalValue)
     onCancel()
 
     expect(onLibraryChange).toHaveBeenCalledWith(nextLibrary)
-    expect(onSave).toHaveBeenCalledWith(finalFragments)
+    expect(onSave).toHaveBeenCalledWith(finalValue)
     expect(saveResult).toEqual({
       ok: true,
-      value: finalFragments,
+      value: finalValue,
       meta: { persistedBy: 'host' },
     })
     expect(onCancel).toHaveBeenCalledTimes(1)

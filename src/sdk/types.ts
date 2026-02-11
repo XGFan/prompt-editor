@@ -29,6 +29,8 @@ export interface PromptEditorValue {
   version?: string | number
   /** 可选扩展元信息 */
   meta?: Record<string, unknown>
+  /** 生成的提示词文本 */
+  promptText?: string
 }
 
 /**
@@ -70,12 +72,12 @@ export interface PromptEditorValidationResult {
 export type PromptEditorSaveResult =
   | {
       ok: true
-      value: FragmentState
+      value: PromptEditorValue
       meta?: Record<string, unknown>
     }
   | {
       ok: false
-      value: FragmentState
+      value: PromptEditorValue
       error: PromptEditorError
       errors?: PromptEditorError[]
       meta?: Record<string, unknown>
@@ -102,12 +104,14 @@ export interface PromptEditorSDKProps {
   disabled?: boolean
   /** 可选只读态 */
   readOnly?: boolean
+  /** 锁定格式（SDK 传入时锁定格式，隐藏切换） */
+  format?: 'markdown' | 'yaml' | 'xml'
 
   /** library 变更事件（独立通道） */
   onLibraryChange?: (nextLibrary: PromptEditorLibrary) => void
 
-  /** 保存意图事件（仅回传左侧 fragments；组件不落库） */
-  onSave: (finalFragments: FragmentState) => void | Promise<PromptEditorSaveResult | void>
+  /** 保存意图事件（回传完整编辑快照；组件不落库） */
+  onSave: (finalValue: PromptEditorValue) => void | Promise<PromptEditorSaveResult | void>
 
   /** 取消意图事件 */
   onCancel: () => void

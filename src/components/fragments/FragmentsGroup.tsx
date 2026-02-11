@@ -169,7 +169,7 @@ export const FragmentsGroup = forwardRef<HTMLDivElement, FragmentsGroupProps>(({
         <div 
           role="button"
           tabIndex={0}
-          className="flex-1 flex items-center gap-1 min-w-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
+          className="flex-1 flex items-center gap-1 min-w-0 h-full cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded px-1"
           onClick={() => !isRenaming && toggleGroupCollapsed({ area: 'fragments', groupId: group.id })}
           onKeyDown={(e) => {
             if ((e.key === 'Enter' || e.key === ' ') && !isRenaming) {

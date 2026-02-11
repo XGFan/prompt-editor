@@ -45,8 +45,8 @@ export function HostSdkIntegrationDemo() {
     }
 
     if (saveResult.ok) {
-      setLatestValue((prev) => ({ ...prev, fragments: saveResult.value }))
-      setValue((prev) => ({ ...prev, fragments: saveResult.value }))
+      setLatestValue(saveResult.value)
+      setValue(saveResult.value)
       setLatestLibrary(library)
       setErrorMessage('')
       setDialogOpen(false)
@@ -118,7 +118,7 @@ export function HostSdkIntegrationDemo() {
               value={value}
               initialLibrary={library}
               onLibraryChange={setLibrary}
-              onSave={async (finalFragments) => ({ ok: true, value: finalFragments })}
+              onSave={async (finalValue) => ({ ok: true, value: finalValue })}
             onCancel={handleSdkCancel}
             onError={handleSdkError}
             validate={(nextValue) => {

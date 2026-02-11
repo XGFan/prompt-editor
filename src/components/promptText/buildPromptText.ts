@@ -25,7 +25,7 @@ export function buildPromptText(fragments: FragmentState, format: PromptFormat =
 
       return {
         name: group.name,
-        prompts: prompts.map((p) => `${p.content.trim()};`),
+        prompts: prompts.map((p) => p.content.trim()),
       };
     })
     .filter((g): g is { name: string; prompts: string[] } => g !== null);
