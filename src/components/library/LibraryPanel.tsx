@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useAppStoreSelector, useCurrentAppStoreApi } from '../../store/hooks';
 import { exportLibraryToJson, importLibraryFromJson, previewLibraryJson } from '../../domain/libraryIo';
-import { LibraryGroup } from './LibraryGroup';
 import { SortableLibraryItem } from './SortableLibraryItem';
 import { Button, IconButton } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -83,36 +82,44 @@ function LibraryTabRow({
         opacity: isDragging ? 0.4 : 1,
         zIndex: isDragging ? 50 : 'auto',
       }}
-      className={`group relative flex items-center h-9 my-0.5 rounded-r-md transition-all ${
-        isOver && !isDragging ? 'bg-blue-50' : ''
-      }`}
+      className={`group relative w-full my-0.5 ${isDragging ? 'z-50' : ''}`}
       data-testid={`library-group-${groupName}`}
     >
-      <div className="flex opacity-0 group-hover:opacity-100 focus-within:opacity-100 pointer-events-none group-hover:pointer-events-auto focus-within:pointer-events-auto transition-opacity absolute left-0 top-0 z-20 h-full w-auto min-w-[240px] items-center gap-1 rounded-r-md bg-white pr-2 shadow-xl ring-1 ring-gray-200">
-        {!readOnly && (
-          <div
+      <TabsTrigger
+        value={groupId}
+        data-testid={`library-tab-${groupId}`}
+        className={`w-full flex items-center gap-2 rounded-md py-2 pl-7 pr-12 text-sm font-medium outline-none transition-all hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 ${
+          isOver && !isDragging ? 'bg-blue-50 ring-2 ring-blue-200' : ''
+        }`}
+        title={groupName}
+      >
+        <span className="flex-1 truncate text-left">
+          {groupName}
+        </span>
+        
+        <span className="shrink-0 text-[10px] text-gray-400 group-data-[state=active]:text-blue-500 font-mono">
+          {count}
+        </span>
+      </TabsTrigger>
+
+      {!readOnly && (
+        <>
+          <button
+            type="button"
             {...attributes}
             {...listeners}
-            className="shrink-0 p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600"
-            data-testid={`library-drag-handle-group-expanded-${groupId}`}
+            className="absolute left-1 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-transparent border-none"
+            data-testid={`library-drag-handle-group-${groupId}`}
+            onClick={(e) => e.stopPropagation()}
+            aria-label="拖拽排序"
           >
             <GripVertical className="w-3.5 h-3.5" />
-          </div>
-        )}
+          </button>
 
-        <TabsTrigger
-          value={groupId}
-          className="flex-1 justify-start gap-2 rounded-md px-2 py-1.5 text-xs text-left"
-          title={groupName}
-        >
-          <span className="font-medium truncate max-w-[140px]">{groupName}</span>
-          <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] text-gray-500">{count}</span>
-        </TabsTrigger>
-
-        {!readOnly && (
-          <div className="flex items-center gap-0.5">
-            <IconButton
-              size="sm"
+          <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity ml-1 z-10">
+            <button
+              type="button"
+              className="p-1 rounded-md hover:bg-gray-200 text-gray-500 bg-transparent border-none cursor-pointer"
               title="添加提示词"
               onClick={(e) => {
                 e.stopPropagation();
@@ -120,11 +127,12 @@ function LibraryTabRow({
               }}
             >
               <Plus className="w-3.5 h-3.5" />
-            </IconButton>
+            </button>
 
             <div className="relative">
-              <IconButton
-                size="sm"
+              <button
+                type="button"
+                className="p-1 rounded-md hover:bg-gray-200 text-gray-500 bg-transparent border-none cursor-pointer"
                 title="菜单"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -132,10 +140,10 @@ function LibraryTabRow({
                 }}
               >
                 <MoreHorizontal className="w-3.5 h-3.5" />
-              </IconButton>
+              </button>
 
               {isMenuOpen && (
-                <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-md border border-gray-100 bg-white py-1 shadow-lg">
+                <div className="absolute right-0 top-full z-30 mt-1 w-32 rounded-md border border-gray-100 bg-white py-1 shadow-lg text-left">
                   <button
                     type="button"
                     className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 ${
@@ -148,7 +156,7 @@ function LibraryTabRow({
                   >
                     {isDeleteConfirm ? (
                       <span className="font-bold whitespace-nowrap">
-                        {count > 0 ? `确认删除（${count}）` : '确认删除'}
+                        确认
                       </span>
                     ) : (
                       <>
@@ -161,30 +169,8 @@ function LibraryTabRow({
               )}
             </div>
           </div>
-        )}
-      </div>
-
-      <div className="flex w-full items-center gap-1 pr-1 group-hover:opacity-0">
-        {!readOnly && (
-          <div
-            {...attributes}
-            {...listeners}
-            className="shrink-0 p-1.5 cursor-grab text-gray-300"
-            data-testid={`library-drag-handle-group-${groupId}`}
-          >
-            <GripVertical className="w-3.5 h-3.5" />
-          </div>
-        )}
-
-        <TabsTrigger
-          value={groupId}
-          data-testid={`library-tab-${groupId}`}
-          className="flex-1 justify-between gap-1 rounded-r-md px-1 py-1.5 text-xs overflow-hidden"
-        >
-          <span className="truncate max-w-[4em]">{groupName}</span>
-          <span className="shrink-0 text-[10px] text-gray-400 font-mono">{count}</span>
-        </TabsTrigger>
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -657,7 +643,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                 className="flex flex-1 min-h-0 overflow-hidden"
               >
                 <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
-                  <TabsList className="h-full w-[110px] shrink-0 flex-col items-stretch justify-start gap-1 overflow-y-auto overflow-x-visible rounded-none border-r border-gray-100 bg-gray-50/60 py-2 pl-2 pr-0 custom-scrollbar z-10">
+                  <TabsList className="h-full w-[240px] shrink-0 flex-col items-stretch justify-start gap-1 overflow-y-auto rounded-none border-r border-gray-100 bg-gray-50/60 py-2 px-2 custom-scrollbar z-10">
                     {groupOrder.map((groupId) => {
                       const group = state.library.groups[groupId];
                       if (!group) return null;
@@ -723,15 +709,15 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
 
         <DragOverlay dropAnimation={dropAnimation}>
           {activeGroup ? (
-            <LibraryGroup
-              group={activeGroup}
-              prompts={activeGroup.promptIds.map(id => state.library.prompts[id]).filter(Boolean) as PromptItem[]}
-              readOnly={readOnly}
-              searchQuery={searchQuery}
-              className="opacity-90 shadow-xl ring-2 ring-blue-500/20 rotate-1 bg-white"
-              style={{ cursor: 'grabbing', pointerEvents: 'none' }}
-              isOverlay
-            />
+            <div className="relative flex w-[240px] items-center gap-2 rounded-md bg-white py-2 pl-7 pr-12 text-sm font-medium shadow-xl ring-2 ring-blue-500/20 rotate-1">
+              <div className="absolute left-1 top-1/2 -translate-y-1/2 p-1 text-gray-400">
+                <GripVertical className="w-3.5 h-3.5" />
+              </div>
+              <span className="flex-1 truncate text-left">{activeGroup.name}</span>
+              <span className="shrink-0 text-[10px] text-gray-400 font-mono">
+                {activeGroup.promptIds.length}
+              </span>
+            </div>
           ) : activePrompt && activePromptGroupId ? (
             <LibraryItem
               prompt={activePrompt}
