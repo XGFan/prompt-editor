@@ -53,6 +53,7 @@ export const createHostSdkDemoInitialValue = (): PromptEditorValue => ({
       library: 420,
       fragments: 640,
     },
+    activeLibraryGroupId: null,
   },
   sessionUi: {
     expandedPromptIds: [],

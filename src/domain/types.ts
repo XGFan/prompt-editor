@@ -48,6 +48,7 @@ export interface PersistedUiState {
     library: number
     fragments: number
   }
+  activeLibraryGroupId: string | null
 }
 
 export interface AppState {

@@ -95,6 +95,7 @@ export const buildBaseState = (): AppState => ({
       library: 420,
       fragments: 600,
     },
+    activeLibraryGroupId: null,
   },
 })
 

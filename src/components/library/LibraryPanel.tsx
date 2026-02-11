@@ -1,13 +1,15 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAppStoreSelector, useCurrentAppStoreApi } from '../../store/hooks';
 import { exportLibraryToJson, importLibraryFromJson, previewLibraryJson } from '../../domain/libraryIo';
 import { LibraryGroup } from './LibraryGroup';
+import { SortableLibraryItem } from './SortableLibraryItem';
 import { Button, IconButton } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Dialog } from '../ui/Dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
 import { useToast } from '../ui/Toast';
 import { useHotkeys } from '../../hooks/useHotkeys';
-import { Search, Plus, Download, Upload, FolderPlus, GripVertical } from 'lucide-react';
+import { Search, Plus, Download, Upload, FolderPlus, GripVertical, MoreHorizontal, Trash2 } from 'lucide-react';
 import { 
   DndContext, 
   DragOverlay, 
@@ -23,10 +25,11 @@ import {
   DropAnimation,
   MeasuringStrategy
 } from '@dnd-kit/core';
-import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable';
+import { sortableKeyboardCoordinates, useSortable } from '@dnd-kit/sortable';
 import { LibraryItem } from './LibraryItem';
 import type { GroupId, PromptId, PromptItem } from '../../domain/types';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 const dropAnimation: DropAnimation = {
   sideEffects: defaultDropAnimationSideEffects({
@@ -42,10 +45,130 @@ interface LibraryPanelProps {
   readOnly?: boolean;
 }
 
+interface LibraryTabRowProps {
+  groupId: GroupId;
+  groupName: string;
+  count: number;
+  readOnly: boolean;
+  isMenuOpen: boolean;
+  isDeleteConfirm: boolean;
+  onCreatePrompt: (groupId: GroupId) => void;
+  onToggleMenu: (groupId: GroupId) => void;
+  onDeleteGroup: (groupId: GroupId) => void;
+}
+
+function LibraryTabRow({
+  groupId,
+  groupName,
+  count,
+  readOnly,
+  isMenuOpen,
+  isDeleteConfirm,
+  onCreatePrompt,
+  onToggleMenu,
+  onDeleteGroup,
+}: LibraryTabRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
+    id: groupId,
+    data: { type: 'GROUP' },
+    disabled: readOnly,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        opacity: isDragging ? 0.4 : 1,
+      }}
+      className={`group relative flex items-center gap-1 rounded-md p-1 ${isOver && !isDragging ? 'bg-blue-50' : ''}`}
+      data-testid={`library-group-${groupName}`}
+    >
+      {!readOnly && (
+        <div
+          {...attributes}
+          {...listeners}
+          className="shrink-0 p-1 rounded cursor-grab active:cursor-grabbing text-gray-400 hover:bg-gray-100"
+          data-testid={`library-drag-handle-group-${groupId}`}
+        >
+          <GripVertical className="w-3.5 h-3.5" />
+        </div>
+      )}
+
+      <TabsTrigger
+        value={groupId}
+        data-testid={`library-tab-${groupId}`}
+        title={groupName}
+        className="flex-1 justify-between gap-2 rounded-md px-2 py-1.5 text-xs"
+      >
+        <span className="truncate">{groupName}</span>
+        <span className="rounded-full bg-gray-100 px-1.5 py-0.5 text-[11px] text-gray-500">{count}</span>
+      </TabsTrigger>
+
+      {!readOnly && (
+        <>
+          <IconButton
+            size="sm"
+            title="添加提示词"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCreatePrompt(groupId);
+            }}
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </IconButton>
+
+          <div className="relative">
+            <IconButton
+              size="sm"
+              title="菜单"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleMenu(groupId);
+              }}
+            >
+              <MoreHorizontal className="w-3.5 h-3.5" />
+            </IconButton>
+
+            {isMenuOpen && (
+              <div className="absolute right-0 top-full z-20 mt-1 w-44 rounded-md border border-gray-100 bg-white py-1 shadow-lg">
+                <button
+                  type="button"
+                  className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 ${
+                    isDeleteConfirm ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteGroup(groupId);
+                  }}
+                >
+                  {isDeleteConfirm ? (
+                    <span className="font-bold whitespace-nowrap">
+                      {count > 0 ? `确认删除（将删除 ${count} 条）` : '确认删除'}
+                    </span>
+                  ) : (
+                    <>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      删除
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
   const { 
     state, 
     createGroup, 
+    createPrompt,
+    deleteGroup,
     save,
     movePrompt,
     reorderPromptWithinGroup,
@@ -60,12 +183,63 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
   const [importContent, setImportContent] = useState<string>('');
   const [newGroupName, setNewGroupName] = useState('');
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [menuOpenGroupId, setMenuOpenGroupId] = useState<GroupId | null>(null);
+  const [deleteConfirmGroupId, setDeleteConfirmGroupId] = useState<GroupId | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [activeType, setActiveType] = useState<'GROUP' | 'PROMPT' | null>(null);
   
   const searchInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const newGroupInputRef = useRef<HTMLInputElement>(null);
+  const deleteTimeoutRef = useRef<number | undefined>(undefined);
+
+  const groupOrder = state.library.groupOrder;
+  const persistedActiveLibraryGroupId = state.ui.activeLibraryGroupId as GroupId | null;
+  const activeGroupId =
+    persistedActiveLibraryGroupId && groupOrder.includes(persistedActiveLibraryGroupId)
+      ? persistedActiveLibraryGroupId
+      : groupOrder[0] ?? null;
+
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const visiblePromptsByGroup = groupOrder.reduce<Record<GroupId, PromptItem[]>>((acc, groupId) => {
+    const group = state.library.groups[groupId];
+    if (!group) {
+      acc[groupId] = [];
+      return acc;
+    }
+
+    acc[groupId] = group.promptIds
+      .map((id) => state.library.prompts[id])
+      .filter((prompt): prompt is PromptItem => Boolean(prompt))
+      .filter((prompt) => !normalizedQuery || prompt.content.toLowerCase().includes(normalizedQuery));
+
+    return acc;
+  }, {} as Record<GroupId, PromptItem[]>);
+
+  useEffect(() => {
+    if (activeGroupId === state.ui.activeLibraryGroupId) {
+      return;
+    }
+
+    appStoreApi.setState((prev) => ({
+      ...prev,
+      state: {
+        ...prev.state,
+        ui: {
+          ...prev.state.ui,
+          activeLibraryGroupId: activeGroupId,
+        },
+      },
+    }));
+  }, [activeGroupId, appStoreApi, state.ui.activeLibraryGroupId]);
+
+  useEffect(() => {
+    return () => {
+      if (deleteTimeoutRef.current) {
+        window.clearTimeout(deleteTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -194,6 +368,52 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
     }
   };
 
+  const setActiveGroupId = (nextGroupId: string) => {
+    appStoreApi.setState((prev) => ({
+      ...prev,
+      state: {
+        ...prev.state,
+        ui: {
+          ...prev.state.ui,
+          activeLibraryGroupId: nextGroupId,
+        },
+      },
+    }));
+  };
+
+  const handleCreatePromptInGroup = (groupId: GroupId) => {
+    if (readOnly) return;
+    createPrompt({ area: 'library', groupId, content: '' });
+    setActiveGroupId(groupId);
+  };
+
+  const handleToggleGroupMenu = (groupId: GroupId) => {
+    setDeleteConfirmGroupId(null);
+    setMenuOpenGroupId((prev) => (prev === groupId ? null : groupId));
+  };
+
+  const handleDeleteGroupFromMenu = (groupId: GroupId) => {
+    if (readOnly) return;
+
+    if (deleteConfirmGroupId === groupId) {
+      deleteGroup({ area: 'library', groupId });
+      setDeleteConfirmGroupId(null);
+      setMenuOpenGroupId(null);
+      if (deleteTimeoutRef.current) {
+        window.clearTimeout(deleteTimeoutRef.current);
+      }
+      return;
+    }
+
+    setDeleteConfirmGroupId(groupId);
+    if (deleteTimeoutRef.current) {
+      window.clearTimeout(deleteTimeoutRef.current);
+    }
+    deleteTimeoutRef.current = window.setTimeout(() => {
+      setDeleteConfirmGroupId(null);
+    }, 3000);
+  };
+
   const findContainer = (id: string): GroupId | undefined => {
     if (state.library.groups[id as GroupId]) {
       return id as GroupId;
@@ -231,7 +451,6 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
     
     if (!activeGroup || !overGroup) return;
 
-    const activeIndex = activeGroup.promptIds.indexOf(active.id as PromptId);
     let overIndex: number;
 
     if (state.library.groups[overId as GroupId]) {
@@ -380,7 +599,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
           )}
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0 custom-scrollbar">
+        <div className="flex-1 min-h-0 overflow-hidden">
           {isCreatingGroup && (
             <div className="p-2 border-b border-blue-100 bg-blue-50/30">
               <input
@@ -395,32 +614,83 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
             </div>
           )}
 
-          <SortableContext items={state.library.groupOrder} strategy={verticalListSortingStrategy}>
-            {state.library.groupOrder.map((groupId: GroupId) => {
-              const group = state.library.groups[groupId];
-              if (!group) return null;
-
-              const groupPrompts = group.promptIds
-                .map(id => state.library.prompts[id])
-                .filter((p): p is NonNullable<typeof p> => !!p);
-
-              return (
-                <LibraryGroup
-                  key={groupId}
-                  group={group}
-                  prompts={groupPrompts}
-                  readOnly={readOnly}
-                  searchQuery={searchQuery}
-                />
-              );
-            })}
-          </SortableContext>
-
-          {state.library.groupOrder.length === 0 && !isCreatingGroup && (
+          {groupOrder.length === 0 && !isCreatingGroup && (
             <div data-testid="library-empty" className="flex flex-col items-center justify-center h-40 text-gray-400 gap-2">
               <FolderPlus className="w-8 h-8 opacity-20" />
               <span className="text-sm">暂无分组</span>
               {!readOnly && <Button size="sm" variant="ghost" onClick={handleCreateGroup}>新建</Button>}
+            </div>
+          )}
+
+          {groupOrder.length > 0 && activeGroupId && (
+            <div className="flex flex-1 overflow-hidden min-h-0">
+              <Tabs
+                orientation="vertical"
+                value={activeGroupId}
+                onValueChange={setActiveGroupId}
+                className="flex flex-1 min-h-0 overflow-hidden"
+              >
+                <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
+                  <TabsList className="h-full w-[280px] shrink-0 flex-col items-stretch justify-start gap-1 overflow-y-auto rounded-none border-r border-gray-100 bg-gray-50/60 p-2 custom-scrollbar">
+                    {groupOrder.map((groupId) => {
+                      const group = state.library.groups[groupId];
+                      if (!group) return null;
+
+                      return (
+                        <LibraryTabRow
+                          key={groupId}
+                          groupId={groupId}
+                          groupName={group.name}
+                          count={visiblePromptsByGroup[groupId]?.length ?? 0}
+                          readOnly={readOnly}
+                          isMenuOpen={menuOpenGroupId === groupId}
+                          isDeleteConfirm={deleteConfirmGroupId === groupId}
+                          onCreatePrompt={handleCreatePromptInGroup}
+                          onToggleMenu={handleToggleGroupMenu}
+                          onDeleteGroup={handleDeleteGroupFromMenu}
+                        />
+                      );
+                    })}
+                  </TabsList>
+                </SortableContext>
+
+                <div className="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+                  {groupOrder.map((groupId) => {
+                    const group = state.library.groups[groupId];
+                    if (!group) return null;
+
+                    const visiblePrompts = visiblePromptsByGroup[groupId] ?? [];
+
+                    return (
+                      <TabsContent
+                        key={groupId}
+                        value={groupId}
+                        className="h-full px-2 py-2"
+                      >
+                        <div className="flex flex-col gap-0.5 min-h-[4px]">
+                          <SortableContext items={visiblePrompts.map((prompt) => prompt.id)} strategy={verticalListSortingStrategy}>
+                            {visiblePrompts.map((prompt) => (
+                              <SortableLibraryItem
+                                key={prompt.id}
+                                prompt={prompt}
+                                groupId={group.id}
+                                readOnly={readOnly}
+                                searchQuery={searchQuery}
+                              />
+                            ))}
+                          </SortableContext>
+
+                          {visiblePrompts.length === 0 && (
+                            <div className="px-8 py-2 text-xs text-gray-400 italic">
+                              {searchQuery ? '无匹配提示词' : '暂无提示词'}
+                            </div>
+                          )}
+                        </div>
+                      </TabsContent>
+                    );
+                  })}
+                </div>
+              </Tabs>
             </div>
           )}
         </div>

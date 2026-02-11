@@ -51,6 +51,7 @@ export const createInitialAppState = (): AppState => ({
       library: 420,
       fragments: 640,
     },
+    activeLibraryGroupId: null,
   },
 })
 

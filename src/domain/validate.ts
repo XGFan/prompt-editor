@@ -265,6 +265,10 @@ export const validateAppState = (value: unknown): AppState => {
         library: asNumber(value.ui.columnWidths.library, 'ui.columnWidths.library'),
         fragments: asNumber(value.ui.columnWidths.fragments, 'ui.columnWidths.fragments'),
       },
+      activeLibraryGroupId:
+        value.ui.activeLibraryGroupId === undefined || value.ui.activeLibraryGroupId === null
+          ? null
+          : asString(value.ui.activeLibraryGroupId, 'ui.activeLibraryGroupId'),
     },
   }
 }

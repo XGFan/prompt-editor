@@ -77,6 +77,7 @@ const buildState = (): AppState => ({
       library: 420,
       fragments: 360,
     },
+    activeLibraryGroupId: null,
   },
 })
 
