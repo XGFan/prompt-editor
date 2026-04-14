@@ -56,6 +56,7 @@ interface LibraryTabRowProps {
   onRenameCancel: () => void;
   onToggleMenu: (groupId: GroupId) => void;
   onDeleteGroup: (groupId: GroupId) => void;
+  onCancelDelete: () => void;
 }
 
 function LibraryTabRow({
@@ -71,6 +72,7 @@ function LibraryTabRow({
   onRenameCancel,
   onToggleMenu,
   onDeleteGroup,
+  onCancelDelete,
 }: LibraryTabRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
     id: groupId,
@@ -112,13 +114,24 @@ function LibraryTabRow({
       }}
       className={`group relative w-full my-0.5 ${isDragging ? 'z-50' : ''}`}
       data-testid={`library-group-${groupName}`}
+      onMouseLeave={() => {
+        if (isDeleteConfirm) {
+          onCancelDelete();
+        }
+        if (isMenuOpen) {
+          onToggleMenu(groupId);
+        }
+      }}
     >
       <TabsTrigger
         value={groupId}
         data-testid={`library-tab-${groupId}`}
-        className={`relative w-full flex items-center gap-2 rounded-md py-2 pl-7 pr-8 text-sm font-medium outline-none transition-all hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-blue-500 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700 ${
-          isOver && !isDragging ? 'bg-blue-50 ring-2 ring-blue-200' : ''
-        }`}
+        className={`relative w-full flex items-center gap-2 rounded-l-md rounded-r-none border border-transparent py-2 pl-2 group-hover:pl-7 pr-4 text-sm font-medium outline-none transition-all duration-200
+          hover:bg-gray-200/50 
+          focus-visible:ring-2 focus-visible:ring-blue-500 
+          data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:border-gray-200 data-[state=active]:border-r-transparent data-[state=active]:-mr-[1px] data-[state=active]:z-10 data-[state=active]:shadow-sm
+          ${isOver && !isDragging ? 'bg-blue-50 ring-2 ring-blue-200' : ''}
+        `}
         title={groupName}
         disabled={isRenaming}
       >
@@ -149,7 +162,7 @@ function LibraryTabRow({
             type="button"
             {...attributes}
             {...listeners}
-            className="absolute left-1 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-transparent border-none"
+            className="absolute left-1 top-1/2 -translate-y-1/2 p-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-opacity z-10 bg-transparent border-none"
             data-testid={`library-drag-handle-group-${groupId}`}
             onClick={(e) => e.stopPropagation()}
             aria-label="拖拽排序"
@@ -172,39 +185,39 @@ function LibraryTabRow({
               </button>
 
               {isMenuOpen && (
-                <div className="absolute right-0 top-full z-30 mt-1 w-32 rounded-md border border-gray-100 bg-white py-1 shadow-lg text-left">
-                  <button
-                    type="button"
-                    className="w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 text-gray-700 hover:bg-gray-50"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onRenameStart(groupId);
-                    }}
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                    重命名
-                  </button>
-                  <button
-                    type="button"
-                    className={`w-full px-3 py-1.5 text-left text-xs flex items-center gap-2 ${
-                      isDeleteConfirm ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'
-                    }`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteGroup(groupId);
-                    }}
-                  >
-                    {isDeleteConfirm ? (
-                      <span className="font-bold whitespace-nowrap">
-                        确认
-                      </span>
-                    ) : (
-                      <>
-                        <Trash2 className="w-3.5 h-3.5" />
-                        删除
-                      </>
-                    )}
-                  </button>
+                  <div className="absolute right-0 top-full z-30 mt-1 w-32 rounded-md border border-gray-100 bg-white py-1 shadow-lg text-left">
+                    <button
+                      type="button"
+                      className="w-full px-3 py-1.5 text-xs flex items-center justify-center gap-2 text-gray-700 hover:bg-gray-50"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRenameStart(groupId);
+                      }}
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                      重命名
+                    </button>
+                    <button
+                      type="button"
+                      className={`w-full px-3 py-1.5 text-xs flex items-center justify-center gap-2 ${
+                        isDeleteConfirm ? 'bg-red-600 text-white hover:bg-red-700' : 'text-red-600 hover:bg-red-50'
+                      }`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteGroup(groupId);
+                      }}
+                    >
+                      {isDeleteConfirm ? (
+                        <span className="font-bold whitespace-nowrap">
+                          确认
+                        </span>
+                      ) : (
+                        <>
+                          <Trash2 className="w-3.5 h-3.5" />
+                          删除
+                        </>
+                      )}
+                    </button>
                 </div>
               )}
             </div>
@@ -623,6 +636,10 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
   const activePrompt = activeType === 'PROMPT' && activeId ? state.library.prompts[activeId as PromptId] : null;
   const activePromptGroupId = activeType === 'PROMPT' && activeId ? findContainer(activeId) : null;
 
+  const handleCancelDeleteGroup = () => {
+    setDeleteConfirmGroupId(null);
+  };
+
   return (
     <DndContext
       sensors={sensors}
@@ -667,10 +684,10 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                 onValueChange={setActiveGroupId}
                 className="flex flex-1 min-h-0 overflow-hidden h-full"
               >
-                <div className="flex flex-col w-[140px] border-r border-gray-200 h-full bg-gray-50/50 shrink-0">
+                <div className="flex flex-col w-[125px] border-r border-gray-200 h-full bg-gray-50 shrink-0">
   
                     <SortableContext items={groupOrder} strategy={verticalListSortingStrategy}>
-                      <TabsList className="flex-1 w-full flex-col items-stretch justify-start gap-0.5 overflow-y-auto p-1 custom-scrollbar border-0 bg-transparent">
+                      <TabsList className="flex-1 w-full flex-col items-stretch justify-start gap-0.5 overflow-y-auto pl-2 py-2 pr-0 custom-scrollbar border-0 bg-transparent">
                         {groupOrder.map((groupId) => {
                           const group = state.library.groups[groupId];
                           if (!group) return null;
@@ -690,12 +707,13 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                               onRenameCancel={handleRenameCancel}
                               onToggleMenu={handleToggleGroupMenu}
                               onDeleteGroup={handleDeleteGroupFromMenu}
+                              onCancelDelete={handleCancelDeleteGroup}
                             />
                           );
                         })}
                         {!readOnly && (
                           isCreatingGroup ? (
-                            <div className="flex items-center w-full h-8 px-2 gap-2 bg-white border border-blue-200 rounded shadow-sm shrink-0 mx-1 my-0.5">
+                            <div className="flex items-center w-full h-8 px-2 gap-2 bg-white border border-blue-300 border-r-transparent rounded-l-md shadow-sm shrink-0 my-0.5 -mr-[1px] relative z-20">
                               <FolderPlus className="w-3.5 h-3.5 text-blue-500 shrink-0" />
                               <input
                                 ref={newGroupInputRef}
@@ -710,11 +728,12 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
                             </div>
                           ) : (
                             <button
-                              className="w-full flex items-center gap-2 py-2 pl-7 pr-4 text-xs text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 rounded-md transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 my-0.5"
+                              type="button"
+                              className="w-full flex items-center justify-center py-2 text-gray-400 hover:text-gray-600 hover:bg-gray-200/50 rounded-l-md rounded-r-none transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 my-0.5 border border-transparent"
                               onClick={handleCreateGroup}
+                              title="新建分组"
                             >
-                              <Plus className="w-3.5 h-3.5" />
-                              新建分组
+                              <Plus className="w-4 h-4" />
                             </button>
                           )
                         )}
@@ -802,7 +821,7 @@ export function LibraryPanel({ readOnly = false }: LibraryPanelProps) {
 
         <DragOverlay dropAnimation={dropAnimation}>
           {activeGroup ? (
-            <div className="relative flex w-[140px] items-center gap-2 rounded-md bg-white py-2 pl-7 pr-2 text-sm font-medium shadow-xl ring-2 ring-blue-500/20 rotate-1">
+            <div className="relative flex w-[125px] items-center gap-2 rounded-md bg-white py-2 pl-7 pr-2 text-sm font-medium shadow-xl ring-2 ring-blue-500/20 rotate-1">
               <div className="absolute left-1 top-1/2 -translate-y-1/2 p-1 text-gray-400">
                 <GripVertical className="w-3.5 h-3.5" />
               </div>

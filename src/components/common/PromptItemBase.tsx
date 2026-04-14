@@ -226,6 +226,7 @@ export const PromptItemBase = forwardRef<HTMLDivElement, PromptItemBaseProps>(
         )}
         {...props}
         {...(viewTestId ? { 'data-testid': viewTestId } : {})}
+        onMouseLeave={() => deleteConfirm && setDeleteConfirm(false)}
       >
         {dragHandle && (
           <div className="flex-none mt-0.5 text-gray-400 cursor-grab active:cursor-grabbing hover:text-gray-600">

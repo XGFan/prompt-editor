@@ -271,7 +271,7 @@ export const FragmentsGroup = forwardRef<HTMLDivElement, FragmentsGroupProps>(({
                       >
                         {deleteConfirm ? (
                           <span className="font-bold whitespace-nowrap">
-                            {prompts.length > 0 ? `确认删除（将删除 ${prompts.length} 条）` : '确认删除'}
+                            确认
                           </span>
                         ) : (
                           <>

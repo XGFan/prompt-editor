@@ -44,7 +44,7 @@ describe('LibraryPanel', () => {
       </ToastProvider>,
     );
 
-    const newGroupBtn = screen.getByText('新建分组');
+    const newGroupBtn = screen.getByTitle('新建分组');
     fireEvent.click(newGroupBtn);
 
     const input = screen.getByPlaceholderText('分组名称...');
@@ -63,7 +63,7 @@ describe('LibraryPanel', () => {
     );
 
     screen.debug();
-    fireEvent.click(screen.getByText('新建分组'));
+    fireEvent.click(screen.getByTitle('新建分组'));
     const groupInput = screen.getByPlaceholderText('分组名称...');
     fireEvent.change(groupInput, { target: { value: 'My Prompts' } });
     fireEvent.blur(groupInput);
